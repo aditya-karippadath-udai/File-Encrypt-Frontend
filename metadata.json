@@ -1,0 +1,6 @@
+{
+  "name": "File Encryption Tool",
+  "description": "Premium, local-first desktop file encryption and decryption utility with batch processing and queue management.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
