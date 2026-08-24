@@ -27,15 +27,15 @@ export const HistoryItemRow: React.FC<HistoryItemRowProps> = ({ item }) => {
   const isEnc = item.operation === 'encrypt';
 
   return (
-    <div className="p-3.5 bg-[#0D1117] border border-slate-800/80 rounded-xl hover:border-slate-700/80 hover:bg-[#111827]/70 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 group">
+    <div className="p-3.5 bg-[#0D1117]/70 backdrop-blur-md border border-[#1F2937] rounded-xl hover:border-[#2563EB]/40 hover:bg-[#111827]/70 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 group">
       {/* File & Operation info */}
       <div
         className="flex items-center gap-3 min-w-0 flex-1 cursor-pointer"
         onClick={() => setInspectedItem({ kind: 'history', data: item })}
       >
-        <div className="w-8 h-8 rounded-lg bg-[#111827] border border-slate-800 flex items-center justify-center shrink-0">
+        <div className="w-8 h-8 rounded-lg bg-[#090D12]/80 border border-[#1F2937] flex items-center justify-center shrink-0">
           {isEnc ? (
-            <Lock className="w-4 h-4 text-blue-400" />
+            <Lock className="w-4 h-4 text-[#60A5FA]" />
           ) : (
             <Unlock className="w-4 h-4 text-purple-400" />
           )}
@@ -43,18 +43,18 @@ export const HistoryItemRow: React.FC<HistoryItemRowProps> = ({ item }) => {
 
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-xs font-semibold text-slate-100 truncate group-hover:text-blue-300 transition-colors">
+            <span className="text-xs font-semibold text-[#F8FAFC] truncate group-hover:text-[#60A5FA] transition-colors">
               {item.fileName}
             </span>
             <Badge variant={isEnc ? 'primary' : 'purple'} size="sm">
               {isEnc ? 'Encrypted' : 'Decrypted'}
             </Badge>
             {item.status === 'completed' ? (
-              <Badge variant="success" size="sm" icon={<CheckCircle2 className="w-3 h-3 text-emerald-400" />}>
+              <Badge variant="success" size="sm" icon={<CheckCircle2 className="w-3 h-3 text-[#22C55E]" />}>
                 Success
               </Badge>
             ) : item.status === 'failed' ? (
-              <Badge variant="danger" size="sm" icon={<AlertCircle className="w-3 h-3 text-red-400" />}>
+              <Badge variant="danger" size="sm" icon={<AlertCircle className="w-3 h-3 text-[#EF4444]" />}>
                 Failed
               </Badge>
             ) : (
@@ -64,11 +64,11 @@ export const HistoryItemRow: React.FC<HistoryItemRowProps> = ({ item }) => {
             )}
           </div>
 
-          <div className="flex items-center gap-3 text-[11px] text-slate-500 font-mono mt-1">
+          <div className="flex items-center gap-3 text-[11px] text-[#64748B] font-mono mt-1">
             <span>{formatBytes(item.originalSize)}</span>
             <span>•</span>
             <span className="flex items-center gap-1">
-              <Clock className="w-3 h-3 text-slate-600" />
+              <Clock className="w-3 h-3 text-[#64748B]" />
               {formatDateTime(item.timestamp)}
             </span>
             <span>•</span>
@@ -81,7 +81,7 @@ export const HistoryItemRow: React.FC<HistoryItemRowProps> = ({ item }) => {
       <div className="flex items-center gap-1.5 shrink-0 self-end sm:self-center">
         <button
           onClick={() => setInspectedItem({ kind: 'history', data: item })}
-          className="p-1.5 text-slate-400 hover:text-slate-200 hover:bg-slate-800 rounded-lg transition-colors"
+          className="p-1.5 text-[#64748B] hover:text-[#CBD5E1] hover:bg-white/5 rounded-lg transition-colors cursor-pointer"
           title="View metadata"
           aria-label="Inspect history item"
         >
@@ -90,7 +90,7 @@ export const HistoryItemRow: React.FC<HistoryItemRowProps> = ({ item }) => {
 
         <button
           onClick={() => deleteHistoryItem(item.id)}
-          className="p-1.5 text-slate-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+          className="p-1.5 text-[#64748B] hover:text-[#EF4444] hover:bg-[#EF4444]/10 rounded-lg transition-colors cursor-pointer"
           title="Remove record"
           aria-label="Delete history entry"
         >

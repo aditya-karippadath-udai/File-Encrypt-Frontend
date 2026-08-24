@@ -25,17 +25,17 @@ export const Button: React.FC<ButtonProps> = ({
 
   const variants = {
     primary:
-      'bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white shadow-sm shadow-blue-900/30 border border-blue-500/30',
+      'bg-[#2563EB] hover:bg-[#3B82F6] active:bg-[#1D4ED8] text-white shadow-lg shadow-blue-900/30 border border-blue-400/25 font-semibold',
     secondary:
-      'bg-[#161F2E] hover:bg-[#1E293B] active:bg-[#0F172A] text-slate-200 border border-slate-700/60 shadow-sm',
+      'bg-[#111827]/80 hover:bg-[#1F2937] active:bg-[#0D1117] text-[#CBD5E1] border border-[#1F2937] backdrop-blur-md shadow-sm',
     outline:
-      'bg-transparent hover:bg-slate-800/60 text-slate-300 border border-slate-700/80 hover:text-white',
+      'bg-transparent hover:bg-[#1F2937]/50 text-[#CBD5E1] border border-[#1F2937] hover:text-white backdrop-blur-xs',
     ghost:
-      'bg-transparent hover:bg-slate-800/50 active:bg-slate-800 text-slate-400 hover:text-slate-200 border border-transparent',
+      'bg-transparent hover:bg-[#1F2937]/40 active:bg-[#1F2937]/70 text-[#64748B] hover:text-[#CBD5E1] border border-transparent',
     danger:
-      'bg-red-500/10 hover:bg-red-500/20 active:bg-red-500/30 text-red-400 border border-red-500/30 hover:border-red-500/50',
+      'bg-[#EF4444]/15 hover:bg-[#EF4444]/25 active:bg-[#EF4444]/35 text-[#FCA5A5] border border-[#EF4444]/30 backdrop-blur-xs',
     success:
-      'bg-emerald-500/10 hover:bg-emerald-500/20 active:bg-emerald-500/30 text-emerald-400 border border-emerald-500/30',
+      'bg-[#22C55E]/15 hover:bg-[#22C55E]/25 active:bg-[#22C55E]/35 text-[#86EFAC] border border-[#22C55E]/30 backdrop-blur-xs',
   };
 
   const sizes = {

@@ -79,80 +79,85 @@ export const FileDropzone: React.FC<FileDropzoneProps> = ({
   };
 
   return (
-    <div
-      onDragOver={handleDragOver}
-      onDragLeave={handleDragLeave}
-      onDrop={handleDrop}
-      className={cn(
-        'relative border-2 border-dashed rounded-2xl p-8 flex flex-col items-center justify-center text-center transition-all duration-200 group bg-[#090D12]/60 select-none cursor-pointer',
-        isDragging
-          ? 'border-blue-500 bg-blue-500/10 scale-[0.99] shadow-lg shadow-blue-500/10'
-          : 'border-slate-800 hover:border-slate-700/80 hover:bg-[#0D1117]/80',
-        className
-      )}
-      onClick={handleBrowseClick}
-    >
-      <input
-        ref={fileInputRef}
-        type="file"
-        multiple
-        className="hidden"
-        onChange={(e) => processDroppedFiles(e.target.files)}
-        accept={encryptedOnly ? '.enc,.aegis,.vault' : undefined}
-      />
+    <div className="relative group">
+      {/* Ambient background glow behind dropzone */}
+      <div className="absolute -inset-0.5 bg-gradient-to-r from-[#2563EB]/15 to-[#7C3AED]/15 rounded-2xl blur-xl opacity-50 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
 
-      {/* Center Shield Icon */}
       <div
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
         className={cn(
-          'w-16 h-16 rounded-2xl flex items-center justify-center mb-4 transition-transform duration-300 group-hover:scale-105 border shadow-xl',
+          'relative border-2 border-dashed rounded-2xl p-8 flex flex-col items-center justify-center text-center transition-all duration-200 bg-[#0D1117]/65 backdrop-blur-md select-none cursor-pointer',
           isDragging
-            ? 'bg-blue-600/20 border-blue-500 text-blue-400'
-            : 'bg-[#111827] border-slate-700/80 text-blue-400 shadow-blue-950/20'
+            ? 'border-[#3B82F6] bg-blue-500/10 scale-[0.99] shadow-lg shadow-blue-500/10'
+            : 'border-[#1F2937] hover:border-[#3B82F6]/60 hover:bg-[#0D1117]/80',
+          className
         )}
+        onClick={handleBrowseClick}
       >
-        {isDragging ? (
-          <UploadCloud className="w-8 h-8 animate-bounce text-blue-400" />
-        ) : (
-          <Shield className="w-8 h-8 text-blue-400" />
-        )}
-      </div>
+        <input
+          ref={fileInputRef}
+          type="file"
+          multiple
+          className="hidden"
+          onChange={(e) => processDroppedFiles(e.target.files)}
+          accept={encryptedOnly ? '.enc,.aegis,.vault' : undefined}
+        />
 
-      {/* Main Copy */}
-      <h3 className="text-base font-semibold text-slate-100 mb-1 tracking-tight">
-        {title || (isDragging ? 'Release to add files' : 'Drop files here')}
-      </h3>
-      <p className="text-xs text-slate-400 max-w-sm mb-4">
-        {subtitle || 'or click anywhere to browse files on your computer'}
-      </p>
-
-      {/* Buttons */}
-      <div className="flex flex-wrap items-center justify-center gap-2.5" onClick={(e) => e.stopPropagation()}>
-        <Button
-          size="sm"
-          variant="primary"
-          icon={<FolderOpen className="w-3.5 h-3.5" />}
-          onClick={handleBrowseClick}
+        {/* Center Shield Icon */}
+        <div
+          className={cn(
+            'w-16 h-16 rounded-2xl flex items-center justify-center mb-4 transition-transform duration-300 group-hover:scale-105 border shadow-xl',
+            isDragging
+              ? 'bg-[#2563EB]/20 border-[#3B82F6] text-[#60A5FA]'
+              : 'bg-[#1F2937] border-[#1F2937] text-[#60A5FA] shadow-blue-950/20'
+          )}
         >
-          Select Files
-        </Button>
+          {isDragging ? (
+            <UploadCloud className="w-8 h-8 animate-bounce text-[#60A5FA]" />
+          ) : (
+            <Shield className="w-8 h-8 text-[#60A5FA]" />
+          )}
+        </div>
 
-        {allowSampleFiles && (
+        {/* Main Copy */}
+        <h3 className="text-base font-semibold text-[#F8FAFC] mb-1 tracking-tight">
+          {title || (isDragging ? 'Release to add files' : 'Drop files here')}
+        </h3>
+        <p className="text-xs text-[#64748B] max-w-sm mb-4">
+          {subtitle || 'or click anywhere to browse files on your computer'}
+        </p>
+
+        {/* Buttons */}
+        <div className="flex flex-wrap items-center justify-center gap-2.5" onClick={(e) => e.stopPropagation()}>
           <Button
             size="sm"
-            variant="secondary"
-            icon={<Sparkles className="w-3.5 h-3.5 text-purple-400" />}
-            onClick={handleLoadSamples}
-            title="Inject realistic demo test files"
+            variant="primary"
+            icon={<FolderOpen className="w-3.5 h-3.5" />}
+            onClick={handleBrowseClick}
           >
-            Load Sample Files
+            Select Files
           </Button>
-        )}
-      </div>
 
-      {/* Privacy Guarantee Pill */}
-      <div className="mt-6 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-900/90 border border-slate-800 text-[11px] text-slate-400">
-        <FileCheck className="w-3 h-3 text-emerald-400" />
-        <span>Files stay entirely on your local device</span>
+          {allowSampleFiles && (
+            <Button
+              size="sm"
+              variant="secondary"
+              icon={<Sparkles className="w-3.5 h-3.5 text-purple-400" />}
+              onClick={handleLoadSamples}
+              title="Inject realistic demo test files"
+            >
+              Load Sample Files
+            </Button>
+          )}
+        </div>
+
+        {/* Privacy Guarantee Pill */}
+        <div className="mt-6 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#0D1117]/90 border border-[#1F2937] text-[11px] text-[#64748B] backdrop-blur-md">
+          <FileCheck className="w-3 h-3 text-[#22C55E]" />
+          <span>Files stay entirely on your local device</span>
+        </div>
       </div>
     </div>
   );

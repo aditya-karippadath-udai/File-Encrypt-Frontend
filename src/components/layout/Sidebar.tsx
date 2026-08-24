@@ -52,23 +52,23 @@ export const Sidebar: React.FC = () => {
   return (
     <aside
       className={cn(
-        'h-full bg-[#0D1117] border-r border-slate-800/80 flex flex-col justify-between transition-all duration-200 shrink-0 select-none z-10',
+        'h-full bg-[#090D12]/80 backdrop-blur-xl border-r border-[#1F2937] flex flex-col justify-between transition-all duration-200 shrink-0 select-none z-10',
         isSidebarCollapsed ? 'w-16' : 'w-56'
       )}
     >
       {/* Top Header & Collapse Button */}
       <div>
-        <div className="h-14 px-3.5 flex items-center justify-between border-b border-slate-800/60">
+        <div className="h-14 px-3.5 flex items-center justify-between border-b border-[#1F2937]">
           {!isSidebarCollapsed && (
             <div className="flex items-center gap-2.5 overflow-hidden">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center text-white shadow-md shadow-blue-900/40 shrink-0">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#2563EB] to-[#7C3AED] flex items-center justify-center text-white shadow-lg shadow-blue-500/20 shrink-0">
                 <Shield className="w-4 h-4" />
               </div>
               <div className="flex flex-col min-w-0">
-                <span className="text-sm font-bold text-slate-100 tracking-tight leading-none">
+                <span className="text-sm font-bold text-[#F8FAFC] tracking-tight leading-none">
                   Aegis Crypt
                 </span>
-                <span className="text-[10px] text-slate-500 font-medium tracking-wide mt-1 uppercase">
+                <span className="text-[10px] text-[#64748B] font-medium tracking-wider mt-1 uppercase">
                   Security Suite
                 </span>
               </div>
@@ -76,7 +76,7 @@ export const Sidebar: React.FC = () => {
           )}
 
           {isSidebarCollapsed && (
-            <div className="w-8 h-8 mx-auto rounded-lg bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center text-white shadow-md shadow-blue-900/40">
+            <div className="w-8 h-8 mx-auto rounded-lg bg-gradient-to-br from-[#2563EB] to-[#7C3AED] flex items-center justify-center text-white shadow-lg shadow-blue-500/20">
               <Shield className="w-4 h-4" />
             </div>
           )}
@@ -84,7 +84,7 @@ export const Sidebar: React.FC = () => {
           <button
             onClick={toggleSidebar}
             className={cn(
-              'text-slate-400 hover:text-slate-200 p-1.5 rounded-lg hover:bg-slate-800/70 transition-colors',
+              'text-[#64748B] hover:text-[#CBD5E1] p-1.5 rounded-lg hover:bg-[#1F2937]/50 transition-colors',
               isSidebarCollapsed && 'hidden'
             )}
             title={isSidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
@@ -105,8 +105,8 @@ export const Sidebar: React.FC = () => {
                 className={cn(
                   'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-semibold transition-all duration-150 relative group',
                   isActive
-                    ? 'bg-blue-600/15 text-blue-400 border border-blue-500/30 font-medium'
-                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 border border-transparent',
+                    ? 'bg-[#1F2937]/70 text-[#60A5FA] border border-[#2563EB]/40 font-semibold shadow-xs'
+                    : 'text-[#64748B] hover:text-[#CBD5E1] hover:bg-[#1F2937]/40 border border-transparent',
                   isSidebarCollapsed && 'justify-center px-2'
                 )}
                 title={isSidebarCollapsed ? item.label : undefined}
@@ -114,7 +114,7 @@ export const Sidebar: React.FC = () => {
                 <span
                   className={cn(
                     'transition-colors shrink-0',
-                    isActive ? 'text-blue-400' : 'text-slate-400 group-hover:text-slate-200'
+                    isActive ? 'text-[#60A5FA]' : 'text-[#64748B] group-hover:text-[#CBD5E1]'
                   )}
                 >
                   {item.icon}
@@ -129,7 +129,7 @@ export const Sidebar: React.FC = () => {
                     className={cn(
                       'px-1.5 py-0.5 text-[10px] font-bold rounded-full border leading-none',
                       isActive
-                        ? 'bg-blue-500 text-white border-blue-400'
+                        ? 'bg-[#2563EB] text-white border-blue-400'
                         : 'bg-blue-950 text-blue-300 border-blue-800/80 animate-pulse',
                       isSidebarCollapsed && 'absolute top-1 right-1 px-1'
                     )}
@@ -144,11 +144,11 @@ export const Sidebar: React.FC = () => {
       </div>
 
       {/* Bottom Section */}
-      <div className="p-3 border-t border-slate-800/80 space-y-2.5">
+      <div className="p-3 border-t border-[#1F2937] space-y-2.5">
         {isSidebarCollapsed ? (
           <button
             onClick={toggleSidebar}
-            className="w-full flex justify-center text-slate-400 hover:text-slate-200 p-2 rounded-lg hover:bg-slate-800/70 transition-colors"
+            className="w-full flex justify-center text-[#64748B] hover:text-[#CBD5E1] p-2 rounded-lg hover:bg-[#1F2937]/50 transition-colors"
             title="Expand sidebar"
           >
             <PanelLeftOpen className="w-4 h-4" />
@@ -156,25 +156,27 @@ export const Sidebar: React.FC = () => {
         ) : (
           <>
             {/* Privacy indicator */}
-            <div className="bg-[#090D12] border border-slate-800/90 rounded-lg p-2.5 flex items-center gap-2.5">
-              <div className="w-2 h-2 rounded-full bg-emerald-400 shrink-0 shadow-[0_0_8px_rgba(52,211,153,0.5)]" />
-              <div className="min-w-0 flex-1">
-                <div className="text-[11px] font-semibold text-slate-300 truncate">
-                  Local-Only Mode
-                </div>
-                <div className="text-[10px] text-slate-500 truncate">Zero cloud telemetry</div>
+            <div className="bg-[#0D1117]/80 border border-[#1F2937] rounded-xl p-3 backdrop-blur-md flex flex-col gap-1.5 shadow-sm">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-[#64748B]">
+                  Privacy Mode
+                </span>
+                <div className="w-2 h-2 rounded-full bg-[#22C55E] shrink-0 shadow-[0_0_8px_rgba(34,197,94,0.5)]" />
               </div>
+              <p className="text-[11px] text-[#CBD5E1] leading-tight">
+                Local-only security active. Zero cloud telemetry.
+              </p>
             </div>
 
             {/* Version & Theme switch */}
-            <div className="flex items-center justify-between pt-1 px-1 text-[11px] text-slate-500">
-              <span className="font-mono text-[10px] text-slate-500">v1.0.0</span>
-              <div className="flex items-center gap-1 bg-slate-900 border border-slate-800 p-0.5 rounded-md">
+            <div className="flex items-center justify-between pt-1 px-1 text-[11px] text-[#64748B]">
+              <span className="font-mono text-[10px] text-[#64748B]">v1.0.0</span>
+              <div className="flex items-center gap-1 bg-[#111827] border border-[#1F2937] p-0.5 rounded-md">
                 <button
                   onClick={() => setTheme('dark')}
                   className={cn(
                     'p-1 rounded text-xs transition-colors',
-                    settings.theme === 'dark' ? 'bg-slate-800 text-blue-400' : 'text-slate-500 hover:text-slate-300'
+                    settings.theme === 'dark' ? 'bg-[#1F2937] text-blue-400' : 'text-[#64748B] hover:text-[#CBD5E1]'
                   )}
                   title="Dark theme"
                   aria-label="Dark theme"
@@ -185,7 +187,7 @@ export const Sidebar: React.FC = () => {
                   onClick={() => setTheme('light')}
                   className={cn(
                     'p-1 rounded text-xs transition-colors',
-                    settings.theme === 'light' ? 'bg-slate-800 text-amber-400' : 'text-slate-500 hover:text-slate-300'
+                    settings.theme === 'light' ? 'bg-[#1F2937] text-amber-400' : 'text-[#64748B] hover:text-[#CBD5E1]'
                   )}
                   title="Light theme"
                   aria-label="Light theme"
@@ -196,7 +198,7 @@ export const Sidebar: React.FC = () => {
                   onClick={() => setTheme('system')}
                   className={cn(
                     'p-1 rounded text-xs transition-colors',
-                    settings.theme === 'system' ? 'bg-slate-800 text-blue-400' : 'text-slate-500 hover:text-slate-300'
+                    settings.theme === 'system' ? 'bg-[#1F2937] text-blue-400' : 'text-[#64748B] hover:text-[#CBD5E1]'
                   )}
                   title="System theme"
                   aria-label="System theme"

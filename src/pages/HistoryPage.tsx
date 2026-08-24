@@ -110,9 +110,9 @@ export const HistoryPage: React.FC = () => {
       </div>
 
       {/* Filter & Search Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[#0D1117] p-3 rounded-xl border border-slate-800">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[#0D1117]/70 backdrop-blur-md p-3 rounded-xl border border-[#1F2937]">
         {/* Filter Tabs */}
-        <div className="flex items-center gap-1 bg-[#090D12] p-1 rounded-lg border border-slate-800/80 shrink-0">
+        <div className="flex items-center gap-1 bg-[#090D12]/80 p-1 rounded-lg border border-[#1F2937] shrink-0">
           {(['all', 'encrypt', 'decrypt', 'failed'] as const).map((tab) => {
             const count =
               tab === 'all'
@@ -127,10 +127,10 @@ export const HistoryPage: React.FC = () => {
               <button
                 key={tab}
                 onClick={() => setFilter(tab)}
-                className={`px-3 py-1 text-xs font-semibold rounded-md transition-all capitalize ${
+                className={`px-3 py-1 text-xs font-semibold rounded-md transition-all capitalize cursor-pointer ${
                   filter === tab
-                    ? 'bg-blue-600/20 text-blue-300 border border-blue-500/30'
-                    : 'text-slate-400 hover:text-slate-200 border border-transparent'
+                    ? 'bg-[#2563EB]/20 text-[#60A5FA] border border-[#2563EB]/40 shadow-xs'
+                    : 'text-[#64748B] hover:text-[#CBD5E1] border border-transparent'
                 }`}
               >
                 {tab === 'all'
@@ -148,32 +148,32 @@ export const HistoryPage: React.FC = () => {
 
         {/* Search input */}
         <div className="relative flex-1 max-w-sm">
-          <Search className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
+          <Search className="w-4 h-4 text-[#64748B] absolute left-3 top-1/2 -translate-y-1/2" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search by file name, path, hash..."
-            className="w-full bg-[#090D12] border border-slate-800 rounded-lg pl-9 pr-3 py-1.5 text-xs text-slate-200 placeholder:text-slate-500 focus:outline-none focus:border-blue-500/80 focus:ring-1 focus:ring-blue-500/40"
+            className="w-full bg-[#090D12]/80 border border-[#1F2937] rounded-lg pl-9 pr-3 py-1.5 text-xs text-[#F8FAFC] placeholder:text-[#64748B] focus:outline-none focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB]"
           />
         </div>
       </div>
 
       {/* History Items List */}
       {history.length === 0 ? (
-        <div className="p-12 bg-[#0D1117] border border-slate-800 rounded-2xl text-center flex flex-col items-center justify-center space-y-4">
-          <div className="w-16 h-16 rounded-2xl bg-blue-600/10 border border-blue-500/30 flex items-center justify-center text-blue-400 shadow-xl">
+        <div className="p-12 bg-[#0D1117]/70 backdrop-blur-md border border-[#1F2937] rounded-2xl text-center flex flex-col items-center justify-center space-y-4">
+          <div className="w-16 h-16 rounded-2xl bg-[#2563EB]/10 border border-[#2563EB]/30 flex items-center justify-center text-[#60A5FA] shadow-xl">
             <FileCheck className="w-8 h-8" />
           </div>
           <div>
-            <h3 className="text-base font-semibold text-slate-200">No activity history</h3>
-            <p className="text-xs text-slate-400 max-w-sm mt-1">
+            <h3 className="text-base font-semibold text-[#F8FAFC]">No activity history</h3>
+            <p className="text-xs text-[#64748B] max-w-sm mt-1">
               Completed operations will automatically appear here with verified cryptographic audit logs.
             </p>
           </div>
         </div>
       ) : filteredHistory.length === 0 ? (
-        <div className="p-8 text-center text-xs text-slate-500 bg-[#0D1117] rounded-xl border border-slate-800">
+        <div className="p-8 text-center text-xs text-[#64748B] bg-[#0D1117]/70 backdrop-blur-md rounded-xl border border-[#1F2937]">
           No records match the current filter or search criteria.
         </div>
       ) : (

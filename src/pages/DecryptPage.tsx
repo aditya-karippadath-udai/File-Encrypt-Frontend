@@ -158,13 +158,13 @@ export const DecryptPage: React.FC = () => {
         )}
 
         {/* Password input */}
-        <div className="p-5 bg-[#0D1117] border border-slate-800 rounded-xl space-y-4">
-          <div className="flex items-center justify-between pb-2 border-b border-slate-800/80">
+        <div className="p-5 bg-[#0D1117]/70 backdrop-blur-md border border-[#1F2937] rounded-xl space-y-4">
+          <div className="flex items-center justify-between pb-2 border-b border-[#1F2937]">
             <div className="flex items-center gap-2">
               <KeyRound className="w-4 h-4 text-purple-400" />
-              <h3 className="text-sm font-semibold text-slate-100">Decryption Key</h3>
+              <h3 className="text-sm font-semibold text-[#F8FAFC]">Decryption Key</h3>
             </div>
-            <span className="text-[11px] text-slate-500 font-mono">Poly1305 MAC Verified</span>
+            <span className="text-[11px] text-[#64748B] font-mono">Poly1305 MAC Verified</span>
           </div>
 
           <div className="space-y-2 max-w-md">
@@ -179,20 +179,20 @@ export const DecryptPage: React.FC = () => {
         </div>
 
         {/* Output Settings */}
-        <div className="p-4 bg-[#0D1117] border border-slate-800 rounded-xl space-y-3">
-          <div className="flex items-center justify-between text-xs font-semibold text-slate-200">
+        <div className="p-4 bg-[#0D1117]/70 backdrop-blur-md border border-[#1F2937] rounded-xl space-y-3">
+          <div className="flex items-center justify-between text-xs font-semibold text-[#F8FAFC]">
             <span className="flex items-center gap-1.5">
               <Folder className="w-4 h-4 text-purple-400" /> Output Destination
             </span>
-            <span className="text-slate-500 font-mono text-[11px]">Decrypted Storage</span>
+            <span className="text-[#64748B] font-mono text-[11px]">Decrypted Storage</span>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
             <label
               className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-all ${
                 outputFolderChoice === 'same'
-                  ? 'border-purple-500/50 bg-purple-500/5 text-slate-200'
-                  : 'border-slate-800 bg-[#090D12] text-slate-400 hover:border-slate-700'
+                  ? 'border-purple-500/50 bg-purple-500/10 text-[#F8FAFC]'
+                  : 'border-[#1F2937] bg-[#090D12]/80 text-[#64748B] hover:border-slate-700'
               }`}
             >
               <input
@@ -203,8 +203,8 @@ export const DecryptPage: React.FC = () => {
                 className="mt-0.5 text-purple-600 focus:ring-purple-500"
               />
               <div>
-                <div className="font-semibold text-slate-200">Same folder as encrypted file</div>
-                <div className="text-[11px] text-slate-500 mt-0.5">
+                <div className="font-semibold text-[#CBD5E1]">Same folder as encrypted file</div>
+                <div className="text-[11px] text-[#64748B] mt-0.5">
                   Restores original extension automatically.
                 </div>
               </div>
@@ -213,8 +213,8 @@ export const DecryptPage: React.FC = () => {
             <label
               className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-all ${
                 outputFolderChoice === 'custom'
-                  ? 'border-purple-500/50 bg-purple-500/5 text-slate-200'
-                  : 'border-slate-800 bg-[#090D12] text-slate-400 hover:border-slate-700'
+                  ? 'border-purple-500/50 bg-purple-500/10 text-[#F8FAFC]'
+                  : 'border-[#1F2937] bg-[#090D12]/80 text-[#64748B] hover:border-slate-700'
               }`}
             >
               <input
@@ -225,8 +225,8 @@ export const DecryptPage: React.FC = () => {
                 className="mt-0.5 text-purple-600 focus:ring-purple-500"
               />
               <div className="min-w-0 flex-1">
-                <div className="font-semibold text-slate-200">Custom Extracted Folder</div>
-                <div className="text-[11px] text-slate-500 font-mono truncate mt-0.5" title={customPath}>
+                <div className="font-semibold text-[#CBD5E1]">Custom Extracted Folder</div>
+                <div className="text-[11px] text-[#64748B] font-mono truncate mt-0.5" title={customPath}>
                   {customPath}
                 </div>
                 {outputFolderChoice === 'custom' && (
@@ -236,7 +236,7 @@ export const DecryptPage: React.FC = () => {
                       e.preventDefault();
                       handleChooseCustomDir();
                     }}
-                    className="mt-2 text-[11px] text-purple-400 hover:text-purple-300 font-medium underline underline-offset-2"
+                    className="mt-2 text-[11px] text-purple-400 hover:text-purple-300 font-medium underline underline-offset-2 cursor-pointer"
                   >
                     Change directory
                   </button>
@@ -247,15 +247,15 @@ export const DecryptPage: React.FC = () => {
         </div>
 
         {/* Submit Bar */}
-        <div className="p-4 bg-[#090D12] border border-slate-800 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="text-xs text-slate-400 font-mono">
+        <div className="p-4 bg-[#090D12]/80 backdrop-blur-md border border-[#1F2937] rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="text-xs text-[#64748B] font-mono">
             {selectedFiles.length > 0 ? (
               <span>
                 {selectedFiles.length} encrypted file{selectedFiles.length > 1 ? 's' : ''} •{' '}
-                <strong className="text-slate-200 font-semibold">{formatBytes(totalBytes)}</strong>
+                <strong className="text-[#CBD5E1] font-semibold">{formatBytes(totalBytes)}</strong>
               </span>
             ) : (
-              <span className="text-slate-500">No encrypted files selected</span>
+              <span className="text-[#64748B]">No encrypted files selected</span>
             )}
           </div>
 

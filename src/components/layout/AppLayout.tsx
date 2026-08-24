@@ -50,12 +50,17 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
   }, [setActiveTab]);
 
   return (
-    <div className="flex h-screen w-screen bg-[#05070A] text-[#F8FAFC] overflow-hidden">
+    <div className="flex h-screen w-screen bg-[#05070A] text-[#F8FAFC] overflow-hidden relative selection:bg-blue-500/30">
+      {/* Ambient background glows for frosted glass reflection */}
+      <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl pointer-events-none -z-10" />
+      <div className="absolute bottom-10 right-1/4 w-[30rem] h-[30rem] bg-indigo-600/5 rounded-full blur-3xl pointer-events-none -z-10" />
+      <div className="absolute top-1/3 right-10 w-72 h-72 bg-purple-600/5 rounded-full blur-3xl pointer-events-none -z-10" />
+
       {/* Collapsible Desktop Sidebar */}
       <Sidebar />
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden bg-[#05070A]">
+      <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden bg-transparent">
         {/* Top Header */}
         <Header />
 

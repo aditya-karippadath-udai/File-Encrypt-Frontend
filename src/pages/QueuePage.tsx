@@ -75,8 +75,8 @@ export const QueuePage: React.FC = () => {
 
       {/* Filter Tabs & Count */}
       {operations.length > 0 && (
-        <div className="flex items-center justify-between gap-2 border-b border-slate-800 pb-3">
-          <div className="flex items-center gap-1.5 bg-[#090D12] p-1 rounded-lg border border-slate-800">
+        <div className="flex items-center justify-between gap-2 border-b border-[#1F2937] pb-3">
+          <div className="flex items-center gap-1.5 bg-[#090D12]/80 p-1 rounded-lg border border-[#1F2937]">
             {(['all', 'active', 'completed', 'failed'] as const).map((tab) => {
               const count =
                 tab === 'all'
@@ -93,10 +93,10 @@ export const QueuePage: React.FC = () => {
                 <button
                   key={tab}
                   onClick={() => setFilter(tab)}
-                  className={`px-3 py-1 text-xs font-semibold rounded-md transition-all capitalize ${
+                  className={`px-3 py-1 text-xs font-semibold rounded-md transition-all capitalize cursor-pointer ${
                     filter === tab
-                      ? 'bg-blue-600/20 text-blue-300 border border-blue-500/30 shadow-xs'
-                      : 'text-slate-400 hover:text-slate-200 border border-transparent'
+                      ? 'bg-[#2563EB]/20 text-[#60A5FA] border border-[#2563EB]/40 shadow-xs'
+                      : 'text-[#64748B] hover:text-[#CBD5E1] border border-transparent'
                   }`}
                 >
                   {tab} ({count})
@@ -105,7 +105,7 @@ export const QueuePage: React.FC = () => {
             })}
           </div>
 
-          <span className="text-xs text-slate-500 font-mono hidden sm:inline-block">
+          <span className="text-xs text-[#64748B] font-mono hidden sm:inline-block">
             Showing {filteredOps.length} item{filteredOps.length === 1 ? '' : 's'}
           </span>
         </div>
@@ -113,13 +113,13 @@ export const QueuePage: React.FC = () => {
 
       {/* Empty State */}
       {operations.length === 0 ? (
-        <div className="p-12 bg-[#0D1117] border border-slate-800 rounded-2xl text-center flex flex-col items-center justify-center space-y-4">
-          <div className="w-16 h-16 rounded-2xl bg-blue-600/10 border border-blue-500/30 flex items-center justify-center text-blue-400 shadow-xl">
+        <div className="p-12 bg-[#0D1117]/70 backdrop-blur-md border border-[#1F2937] rounded-2xl text-center flex flex-col items-center justify-center space-y-4">
+          <div className="w-16 h-16 rounded-2xl bg-[#2563EB]/10 border border-[#2563EB]/30 flex items-center justify-center text-[#60A5FA] shadow-xl">
             <Shield className="w-8 h-8" />
           </div>
           <div>
-            <h3 className="text-base font-semibold text-slate-200">No active operations</h3>
-            <p className="text-xs text-slate-400 max-w-sm mt-1">
+            <h3 className="text-base font-semibold text-[#F8FAFC]">No active operations</h3>
+            <p className="text-xs text-[#64748B] max-w-sm mt-1">
               The queue is currently idle. Drop files to encrypt, decrypt, or test with sample items.
             </p>
           </div>
@@ -158,7 +158,7 @@ export const QueuePage: React.FC = () => {
           ))}
 
           {filteredOps.length === 0 && (
-            <div className="p-8 text-center text-xs text-slate-500 bg-[#0D1117] rounded-xl border border-slate-800">
+            <div className="p-8 text-center text-xs text-[#64748B] bg-[#0D1117]/70 backdrop-blur-md rounded-xl border border-[#1F2937]">
               No operations match the selected filter.
             </div>
           )}

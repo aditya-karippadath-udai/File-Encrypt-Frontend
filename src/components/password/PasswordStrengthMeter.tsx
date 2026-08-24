@@ -19,11 +19,11 @@ export const PasswordStrengthMeter: React.FC<PasswordStrengthMeterProps> = ({
   const scoreBars = [1, 2, 3, 4];
 
   return (
-    <div className="space-y-2 p-3 bg-[#090D12] border border-slate-800/90 rounded-lg text-xs">
+    <div className="space-y-2 p-3 bg-[#090D12]/80 border border-[#1F2937] rounded-lg text-xs">
       <div className="flex items-center justify-between">
-        <span className="text-slate-400 font-medium flex items-center gap-1.5">
+        <span className="text-[#64748B] font-medium flex items-center gap-1.5">
           {evalResult.score >= 3 ? (
-            <ShieldCheck className="w-3.5 h-3.5 text-blue-400" />
+            <ShieldCheck className="w-3.5 h-3.5 text-[#60A5FA]" />
           ) : (
             <ShieldAlert className="w-3.5 h-3.5 text-amber-400" />
           )}
@@ -43,7 +43,7 @@ export const PasswordStrengthMeter: React.FC<PasswordStrengthMeterProps> = ({
               key={barIndex}
               className={cn(
                 'h-1.5 rounded-full transition-all duration-300',
-                isActive ? evalResult.bgGradient : 'bg-slate-800'
+                isActive ? evalResult.bgGradient : 'bg-[#1F2937]'
               )}
             />
           );
@@ -52,29 +52,29 @@ export const PasswordStrengthMeter: React.FC<PasswordStrengthMeterProps> = ({
 
       {/* Rules checklist */}
       {showSuggestions && (
-        <div className="pt-2 border-t border-slate-800/80 grid grid-cols-2 gap-x-2 gap-y-1 text-[11px]">
+        <div className="pt-2 border-t border-[#1F2937] grid grid-cols-2 gap-x-2 gap-y-1 text-[11px]">
           <div className="flex items-center gap-1.5">
             {evalResult.hasMinLength ? (
-              <Check className="w-3 h-3 text-emerald-400" />
+              <Check className="w-3 h-3 text-[#22C55E]" />
             ) : (
-              <X className="w-3 h-3 text-slate-600" />
+              <X className="w-3 h-3 text-[#64748B]" />
             )}
-            <span className={evalResult.hasMinLength ? 'text-slate-300' : 'text-slate-500'}>
+            <span className={evalResult.hasMinLength ? 'text-[#CBD5E1]' : 'text-[#64748B]'}>
               8+ characters
             </span>
           </div>
 
           <div className="flex items-center gap-1.5">
             {evalResult.hasUppercase && evalResult.hasLowercase ? (
-              <Check className="w-3 h-3 text-emerald-400" />
+              <Check className="w-3 h-3 text-[#22C55E]" />
             ) : (
-              <X className="w-3 h-3 text-slate-600" />
+              <X className="w-3 h-3 text-[#64748B]" />
             )}
             <span
               className={
                 evalResult.hasUppercase && evalResult.hasLowercase
-                  ? 'text-slate-300'
-                  : 'text-slate-500'
+                  ? 'text-[#CBD5E1]'
+                  : 'text-[#64748B]'
               }
             >
               Upper & lower case
@@ -83,22 +83,22 @@ export const PasswordStrengthMeter: React.FC<PasswordStrengthMeterProps> = ({
 
           <div className="flex items-center gap-1.5">
             {evalResult.hasNumber ? (
-              <Check className="w-3 h-3 text-emerald-400" />
+              <Check className="w-3 h-3 text-[#22C55E]" />
             ) : (
-              <X className="w-3 h-3 text-slate-600" />
+              <X className="w-3 h-3 text-[#64748B]" />
             )}
-            <span className={evalResult.hasNumber ? 'text-slate-300' : 'text-slate-500'}>
+            <span className={evalResult.hasNumber ? 'text-[#CBD5E1]' : 'text-[#64748B]'}>
               Number (0-9)
             </span>
           </div>
 
           <div className="flex items-center gap-1.5">
             {evalResult.hasSymbol ? (
-              <Check className="w-3 h-3 text-emerald-400" />
+              <Check className="w-3 h-3 text-[#22C55E]" />
             ) : (
-              <X className="w-3 h-3 text-slate-600" />
+              <X className="w-3 h-3 text-[#64748B]" />
             )}
-            <span className={evalResult.hasSymbol ? 'text-slate-300' : 'text-slate-500'}>
+            <span className={evalResult.hasSymbol ? 'text-[#CBD5E1]' : 'text-[#64748B]'}>
               Special symbol
             </span>
           </div>

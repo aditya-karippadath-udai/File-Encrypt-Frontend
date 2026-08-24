@@ -182,13 +182,13 @@ export const EncryptPage: React.FC = () => {
         )}
 
         {/* Password & Security Configuration */}
-        <div className="p-5 bg-[#0D1117] border border-slate-800 rounded-xl space-y-4">
-          <div className="flex items-center justify-between pb-2 border-b border-slate-800/80">
+        <div className="p-5 bg-[#0D1117]/70 backdrop-blur-md border border-[#1F2937] rounded-xl space-y-4">
+          <div className="flex items-center justify-between pb-2 border-b border-[#1F2937]">
             <div className="flex items-center gap-2">
-              <ShieldCheck className="w-4 h-4 text-blue-400" />
-              <h3 className="text-sm font-semibold text-slate-100">Encryption Password</h3>
+              <ShieldCheck className="w-4 h-4 text-[#60A5FA]" />
+              <h3 className="text-sm font-semibold text-[#F8FAFC]">Encryption Password</h3>
             </div>
-            <span className="text-[11px] text-slate-500 font-mono">
+            <span className="text-[11px] text-[#64748B] font-mono">
               XChaCha20-Poly1305 + Argon2id
             </span>
           </div>
@@ -224,20 +224,20 @@ export const EncryptPage: React.FC = () => {
         </div>
 
         {/* Output Settings */}
-        <div className="p-4 bg-[#0D1117] border border-slate-800 rounded-xl space-y-3">
-          <div className="flex items-center justify-between text-xs font-semibold text-slate-200">
+        <div className="p-4 bg-[#0D1117]/70 backdrop-blur-md border border-[#1F2937] rounded-xl space-y-3">
+          <div className="flex items-center justify-between text-xs font-semibold text-[#F8FAFC]">
             <span className="flex items-center gap-1.5">
-              <Folder className="w-4 h-4 text-blue-400" /> Output Location
+              <Folder className="w-4 h-4 text-[#60A5FA]" /> Output Location
             </span>
-            <span className="text-slate-500 font-mono text-[11px]">Desktop Target</span>
+            <span className="text-[#64748B] font-mono text-[11px]">Desktop Target</span>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
             <label
               className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-all ${
                 outputFolderChoice === 'same'
-                  ? 'border-blue-500/50 bg-blue-500/5 text-slate-200'
-                  : 'border-slate-800 bg-[#090D12] text-slate-400 hover:border-slate-700'
+                  ? 'border-[#2563EB]/50 bg-[#2563EB]/10 text-[#F8FAFC]'
+                  : 'border-[#1F2937] bg-[#090D12]/80 text-[#64748B] hover:border-slate-700'
               }`}
             >
               <input
@@ -248,9 +248,9 @@ export const EncryptPage: React.FC = () => {
                 className="mt-0.5 text-blue-600 focus:ring-blue-500"
               />
               <div>
-                <div className="font-semibold text-slate-200">Same folder as original</div>
-                <div className="text-[11px] text-slate-500 mt-0.5">
-                  Appends <code className="font-mono text-blue-400">.enc</code> to the original filename.
+                <div className="font-semibold text-[#CBD5E1]">Same folder as original</div>
+                <div className="text-[11px] text-[#64748B] mt-0.5">
+                  Appends <code className="font-mono text-[#60A5FA]">.enc</code> to the original filename.
                 </div>
               </div>
             </label>
@@ -258,8 +258,8 @@ export const EncryptPage: React.FC = () => {
             <label
               className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-all ${
                 outputFolderChoice === 'custom'
-                  ? 'border-blue-500/50 bg-blue-500/5 text-slate-200'
-                  : 'border-slate-800 bg-[#090D12] text-slate-400 hover:border-slate-700'
+                  ? 'border-[#2563EB]/50 bg-[#2563EB]/10 text-[#F8FAFC]'
+                  : 'border-[#1F2937] bg-[#090D12]/80 text-[#64748B] hover:border-slate-700'
               }`}
             >
               <input
@@ -270,8 +270,8 @@ export const EncryptPage: React.FC = () => {
                 className="mt-0.5 text-blue-600 focus:ring-blue-500"
               />
               <div className="min-w-0 flex-1">
-                <div className="font-semibold text-slate-200">Custom Vault Folder</div>
-                <div className="text-[11px] text-slate-500 font-mono truncate mt-0.5" title={customPath}>
+                <div className="font-semibold text-[#CBD5E1]">Custom Vault Folder</div>
+                <div className="text-[11px] text-[#64748B] font-mono truncate mt-0.5" title={customPath}>
                   {customPath}
                 </div>
                 {outputFolderChoice === 'custom' && (
@@ -281,7 +281,7 @@ export const EncryptPage: React.FC = () => {
                       e.preventDefault();
                       handleChooseCustomDir();
                     }}
-                    className="mt-2 text-[11px] text-blue-400 hover:text-blue-300 font-medium underline underline-offset-2"
+                    className="mt-2 text-[11px] text-[#60A5FA] hover:text-[#93C5FD] font-medium underline underline-offset-2 cursor-pointer"
                   >
                     Change directory
                   </button>
@@ -292,15 +292,15 @@ export const EncryptPage: React.FC = () => {
         </div>
 
         {/* Submit Bar */}
-        <div className="p-4 bg-[#090D12] border border-slate-800 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="text-xs text-slate-400 font-mono">
+        <div className="p-4 bg-[#090D12]/80 backdrop-blur-md border border-[#1F2937] rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="text-xs text-[#64748B] font-mono">
             {selectedFiles.length > 0 ? (
               <span>
                 {selectedFiles.length} file{selectedFiles.length > 1 ? 's' : ''} queued •{' '}
-                <strong className="text-slate-200 font-semibold">{formatBytes(totalBytes)}</strong>
+                <strong className="text-[#CBD5E1] font-semibold">{formatBytes(totalBytes)}</strong>
               </span>
             ) : (
-              <span className="text-slate-500">No files selected</span>
+              <span className="text-[#64748B]">No files selected</span>
             )}
           </div>
 

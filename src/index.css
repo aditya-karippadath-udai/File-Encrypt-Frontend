@@ -10,6 +10,8 @@
     font-family: var(--font-sans);
     user-select: none;
     -webkit-user-select: none;
+    background-color: #05070A;
+    color: #F8FAFC;
   }
 
   /* Custom subtle dark scrollbars for desktop feel */
@@ -21,7 +23,7 @@
     background: transparent;
   }
   ::-webkit-scrollbar-thumb {
-    background: #1f2937;
+    background: #1F2937;
     border-radius: 9999px;
   }
   ::-webkit-scrollbar-thumb:hover {
@@ -31,5 +33,21 @@
 
 .font-mono {
   font-family: var(--font-mono);
+}
+
+/* Frosted glass glow utilities */
+.glass-panel {
+  background-color: rgba(13, 17, 23, 0.65);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid #1F2937;
+}
+
+.glass-panel-hover {
+  transition: all 0.2s ease-in-out;
+}
+.glass-panel-hover:hover {
+  border-color: rgba(59, 130, 246, 0.4);
+  background-color: rgba(13, 17, 23, 0.8);
 }
 
