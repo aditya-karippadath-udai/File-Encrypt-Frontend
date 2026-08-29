@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import { useSettingsStore } from '../stores/useSettingsStore';
 import { useToastStore } from '../stores/useToastStore';
-import { desktopService } from '../services/desktop/mockDesktopService';
+import { desktopService } from '../services/desktop/desktopService';
 import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
 import { ThemeMode, OutputBehavior } from '../types';

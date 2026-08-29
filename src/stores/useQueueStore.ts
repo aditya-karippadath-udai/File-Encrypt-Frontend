@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { EncryptionOperation, FileItem, OperationType, ProcessingProgress } from '../types';
-import { encryptionService } from '../services/encryption/mockEncryptionService';
+import { encryptionService } from '../services/encryption/webCryptoEncryptionService';
 import { useHistoryStore } from './useHistoryStore';
 import { useSettingsStore } from './useSettingsStore';
 import { useToastStore } from './useToastStore';

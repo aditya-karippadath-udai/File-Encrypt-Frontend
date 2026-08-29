@@ -3,10 +3,6 @@ import {
   Lock,
   Folder,
   ShieldCheck,
-  ArrowRight,
-  AlertTriangle,
-  Settings,
-  Sparkles,
 } from 'lucide-react';
 import { FileItem } from '../types';
 import { useQueueStore } from '../stores/useQueueStore';
@@ -18,7 +14,7 @@ import { FileList } from '../components/files/FileList';
 import { PasswordInput } from '../components/password/PasswordInput';
 import { PasswordStrengthMeter } from '../components/password/PasswordStrengthMeter';
 import { Button } from '../components/ui/Button';
-import { desktopService } from '../services/desktop/mockDesktopService';
+import { desktopService } from '../services/desktop/desktopService';
 import { formatBytes } from '../utils/formatters';
 
 export const EncryptPage: React.FC = () => {
@@ -26,7 +22,7 @@ export const EncryptPage: React.FC = () => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [outputFolderChoice, setOutputFolderChoice] = useState<'same' | 'custom'>('same');
-  const [customPath, setCustomPath] = useState('~/Documents/AegisOutput');
+  const [customPath, setCustomPath] = useState('~/Downloads');
 
   const { addFilesToQueue } = useQueueStore();
   const { setActiveTab } = useUIStore();
@@ -79,11 +75,6 @@ export const EncryptPage: React.FC = () => {
     }
   };
 
-  const handleQuickLoadDemos = () => {
-    const demos = desktopService.getSampleDemoFiles(false);
-    handleFilesAdded(demos);
-  };
-
   // Validation rules
   const passwordsMatch = password.length > 0 && password === confirmPassword;
   const isPasswordValid = password.length >= 8;
@@ -118,7 +109,7 @@ export const EncryptPage: React.FC = () => {
     }
 
     // Add to queue
-    const opIds = addFilesToQueue(selectedFiles, 'encrypt', password, true);
+    addFilesToQueue(selectedFiles, 'encrypt', password, true);
 
     addToast({
       type: 'info',
@@ -147,20 +138,9 @@ export const EncryptPage: React.FC = () => {
             Encrypt Files
           </h1>
           <p className="text-xs text-[#64748B] dark:text-slate-400 mt-0.5">
-            Encrypt local files with authenticated XChaCha20-Poly1305 encryption.
+            Encrypt local files with authenticated 256-bit AEAD encryption and PBKDF2 key derivation.
           </p>
         </div>
-
-        {selectedFiles.length === 0 && (
-          <Button
-            size="xs"
-            variant="outline"
-            icon={<Sparkles className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />}
-            onClick={handleQuickLoadDemos}
-          >
-            Insert Demo Files
-          </Button>
-        )}
       </div>
 
       <form onSubmit={handleEncryptSubmit} className="space-y-6">
@@ -189,7 +169,7 @@ export const EncryptPage: React.FC = () => {
               <h3 className="text-sm font-semibold text-[#0F172A] dark:text-[#F8FAFC]">Encryption Password</h3>
             </div>
             <span className="text-[11px] text-[#64748B] font-mono">
-              XChaCha20-Poly1305 + Argon2id
+              AES-256-GCM + PBKDF2 (100k)
             </span>
           </div>
 
@@ -248,7 +228,7 @@ export const EncryptPage: React.FC = () => {
                 className="mt-0.5 text-[#2563EB] focus:ring-[#2563EB]"
               />
               <div>
-                <div className="font-semibold text-[#1E293B] dark:text-[#CBD5E1]">Same folder as original</div>
+                <div className="font-semibold text-[#1E293B] dark:text-[#CBD5E1]">Save / Download Encrypted File</div>
                 <div className="text-[11px] text-[#64748B] mt-0.5">
                   Appends <code className="font-mono text-[#2563EB] dark:text-[#60A5FA]">.enc</code> to the original filename.
                 </div>
@@ -270,7 +250,7 @@ export const EncryptPage: React.FC = () => {
                 className="mt-0.5 text-[#2563EB] focus:ring-[#2563EB]"
               />
               <div className="min-w-0 flex-1">
-                <div className="font-semibold text-[#1E293B] dark:text-[#CBD5E1]">Custom Vault Folder</div>
+                <div className="font-semibold text-[#1E293B] dark:text-[#CBD5E1]">Custom Destination Folder</div>
                 <div className="text-[11px] text-[#64748B] font-mono truncate mt-0.5" title={customPath}>
                   {customPath}
                 </div>

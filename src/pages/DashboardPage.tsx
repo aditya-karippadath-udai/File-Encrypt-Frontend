@@ -180,41 +180,49 @@ export const DashboardPage: React.FC = () => {
             </button>
           </div>
 
-          <div className="divide-y divide-[#E2E8F0] dark:divide-[#1F2937]/70">
-            {history.slice(0, 4).map((item) => (
-              <div
-                key={item.id}
-                className="py-3 flex items-center justify-between gap-3 text-xs"
-              >
-                <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                  <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-[#111827] border border-[#E2E8F0] dark:border-[#1F2937] flex items-center justify-center shrink-0">
-                    {item.operation === 'encrypt' ? (
-                      <Lock className="w-3.5 h-3.5 text-[#2563EB] dark:text-[#60A5FA]" />
-                    ) : (
-                      <Unlock className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
-                    )}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="font-semibold text-[#1E293B] dark:text-[#CBD5E1] truncate">{item.fileName}</div>
-                    <div className="text-[11px] text-[#64748B] font-mono">
-                      {formatBytes(item.originalSize)} • {formatDateTime(item.timestamp)}
+          {history.length === 0 ? (
+            <div className="py-8 text-center text-xs text-[#64748B] flex flex-col items-center justify-center space-y-2">
+              <History className="w-6 h-6 text-slate-300 dark:text-slate-700" />
+              <p>No recent activity yet.</p>
+              <p className="text-[11px] text-[#94A3B8]">Encrypt or decrypt files to view your execution history.</p>
+            </div>
+          ) : (
+            <div className="divide-y divide-[#E2E8F0] dark:divide-[#1F2937]/70">
+              {history.slice(0, 4).map((item) => (
+                <div
+                  key={item.id}
+                  className="py-3 flex items-center justify-between gap-3 text-xs"
+                >
+                  <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                    <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-[#111827] border border-[#E2E8F0] dark:border-[#1F2937] flex items-center justify-center shrink-0">
+                      {item.operation === 'encrypt' ? (
+                        <Lock className="w-3.5 h-3.5 text-[#2563EB] dark:text-[#60A5FA]" />
+                      ) : (
+                        <Unlock className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="font-semibold text-[#1E293B] dark:text-[#CBD5E1] truncate">{item.fileName}</div>
+                      <div className="text-[11px] text-[#64748B] font-mono">
+                        {formatBytes(item.originalSize)} • {formatDateTime(item.timestamp)}
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <Badge
-                  variant={item.status === 'completed' ? 'success' : 'danger'}
-                  size="sm"
-                >
-                  {item.status === 'completed'
-                    ? item.operation === 'encrypt'
-                      ? 'Encrypted'
-                      : 'Decrypted'
-                    : 'Failed'}
-                </Badge>
-              </div>
-            ))}
-          </div>
+                  <Badge
+                    variant={item.status === 'completed' ? 'success' : 'danger'}
+                    size="sm"
+                  >
+                    {item.status === 'completed'
+                      ? item.operation === 'encrypt'
+                        ? 'Encrypted'
+                        : 'Decrypted'
+                      : 'Failed'}
+                  </Badge>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Security Engine Status (1 col) */}

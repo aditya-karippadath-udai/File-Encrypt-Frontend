@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
-import { Shield, UploadCloud, FolderOpen, FileCheck, Sparkles } from 'lucide-react';
+import { Shield, UploadCloud, FolderOpen, FileCheck } from 'lucide-react';
 import { FileItem } from '../../types';
-import { desktopService } from '../../services/desktop/mockDesktopService';
+import { desktopService } from '../../services/desktop/desktopService';
 import { generateId } from '../../utils/formatters';
 import { Button } from '../ui/Button';
 import { cn } from '../../utils/cn';
@@ -12,7 +12,6 @@ export interface FileDropzoneProps {
   title?: string;
   subtitle?: string;
   className?: string;
-  allowSampleFiles?: boolean;
 }
 
 export const FileDropzone: React.FC<FileDropzoneProps> = ({
@@ -21,7 +20,6 @@ export const FileDropzone: React.FC<FileDropzoneProps> = ({
   title,
   subtitle,
   className,
-  allowSampleFiles = true,
 }) => {
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -49,7 +47,7 @@ export const FileDropzone: React.FC<FileDropzoneProps> = ({
         name: file.name,
         size: file.size,
         type: file.type || 'application/octet-stream',
-        path: `~/Documents/${file.name}`,
+        path: file.name,
         lastModified: file.lastModified || Date.now(),
         isEncrypted: isEnc,
         rawFile: file,
@@ -71,11 +69,6 @@ export const FileDropzone: React.FC<FileDropzoneProps> = ({
     if (selected.length > 0) {
       onFilesSelected(selected);
     }
-  };
-
-  const handleLoadSamples = () => {
-    const samples = desktopService.getSampleDemoFiles(encryptedOnly);
-    onFilesSelected(samples);
   };
 
   return (
@@ -139,18 +132,6 @@ export const FileDropzone: React.FC<FileDropzoneProps> = ({
           >
             Select Files
           </Button>
-
-          {allowSampleFiles && (
-            <Button
-              size="sm"
-              variant="secondary"
-              icon={<Sparkles className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />}
-              onClick={handleLoadSamples}
-              title="Inject realistic demo test files"
-            >
-              Load Sample Files
-            </Button>
-          )}
         </div>
 
         {/* Privacy Guarantee Pill */}

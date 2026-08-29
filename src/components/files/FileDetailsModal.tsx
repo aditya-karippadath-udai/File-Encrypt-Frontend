@@ -20,7 +20,7 @@ import { formatBytes, formatDateTime, formatDurationMs } from '../../utils/forma
 import { Modal } from '../ui/Modal';
 import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';
-import { desktopService } from '../../services/desktop/mockDesktopService';
+import { desktopService } from '../../services/desktop/desktopService';
 
 export const FileDetailsModal: React.FC = () => {
   const { inspectedItem, setInspectedItem } = useUIStore();

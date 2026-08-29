@@ -5,18 +5,15 @@ import {
   Lock,
   Unlock,
   Shield,
-  Layers,
-  Sparkles,
 } from 'lucide-react';
 import { useQueueStore } from '../stores/useQueueStore';
 import { useUIStore } from '../stores/useUIStore';
 import { QueueItemCard } from '../components/queue/QueueItemCard';
 import { BatchProgressCard } from '../components/queue/BatchProgressCard';
 import { Button } from '../components/ui/Button';
-import { desktopService } from '../services/desktop/mockDesktopService';
 
 export const QueuePage: React.FC = () => {
-  const { operations, addFilesToQueue } = useQueueStore();
+  const { operations } = useQueueStore();
   const { setActiveTab } = useUIStore();
   const [filter, setFilter] = useState<'all' | 'active' | 'completed' | 'failed'>('all');
 
@@ -28,11 +25,6 @@ export const QueuePage: React.FC = () => {
     if (filter === 'failed') return op.status === 'failed' || op.status === 'cancelled';
     return true;
   });
-
-  const handleInjectSampleBatch = () => {
-    const samples = desktopService.getSampleDemoFiles(false);
-    addFilesToQueue(samples.slice(0, 3), 'encrypt', 'SecurePass123!@#', true);
-  };
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
@@ -49,16 +41,6 @@ export const QueuePage: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-2">
-          <Button
-            size="sm"
-            variant="outline"
-            icon={<Sparkles className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />}
-            onClick={handleInjectSampleBatch}
-            title="Inject 3 test files into active queue"
-          >
-            Add Demo Batch
-          </Button>
-
           <Button
             size="sm"
             variant="primary"
@@ -120,7 +102,7 @@ export const QueuePage: React.FC = () => {
           <div>
             <h3 className="text-base font-semibold text-[#0F172A] dark:text-[#F8FAFC]">No active operations</h3>
             <p className="text-xs text-[#64748B] max-w-sm mt-1">
-              The queue is currently idle. Drop files to encrypt, decrypt, or test with sample items.
+              The queue is currently idle. Drop files to encrypt or decrypt.
             </p>
           </div>
           <div className="flex items-center gap-3 pt-2">
@@ -139,14 +121,6 @@ export const QueuePage: React.FC = () => {
               onClick={() => setActiveTab('decrypt')}
             >
               Decrypt Files
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              icon={<Sparkles className="w-4 h-4 text-purple-600 dark:text-purple-400" />}
-              onClick={handleInjectSampleBatch}
-            >
-              Test Demo Batch
             </Button>
           </div>
         </div>

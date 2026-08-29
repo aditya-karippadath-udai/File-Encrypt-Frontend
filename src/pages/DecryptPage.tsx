@@ -2,9 +2,6 @@ import React, { useState, useEffect } from 'react';
 import {
   Unlock,
   Folder,
-  ShieldCheck,
-  Sparkles,
-  AlertCircle,
   KeyRound,
 } from 'lucide-react';
 import { FileItem } from '../types';
@@ -15,14 +12,14 @@ import { FileDropzone } from '../components/files/FileDropzone';
 import { FileList } from '../components/files/FileList';
 import { PasswordInput } from '../components/password/PasswordInput';
 import { Button } from '../components/ui/Button';
-import { desktopService } from '../services/desktop/mockDesktopService';
+import { desktopService } from '../services/desktop/desktopService';
 import { formatBytes } from '../utils/formatters';
 
 export const DecryptPage: React.FC = () => {
   const [selectedFiles, setSelectedFiles] = useState<FileItem[]>([]);
   const [password, setPassword] = useState('');
   const [outputFolderChoice, setOutputFolderChoice] = useState<'same' | 'custom'>('same');
-  const [customPath, setCustomPath] = useState('~/Documents/AegisOutput');
+  const [customPath, setCustomPath] = useState('~/Downloads');
 
   const { addFilesToQueue } = useQueueStore();
   const { setActiveTab } = useUIStore();
@@ -48,6 +45,13 @@ export const DecryptPage: React.FC = () => {
     setSelectedFiles((prev) => {
       const existingNames = new Set(prev.map((f) => f.name));
       const filtered = files.filter((f) => !existingNames.has(f.name));
+      if (filtered.length < files.length) {
+        addToast({
+          type: 'warning',
+          title: 'Duplicate Files Skipped',
+          message: 'Files with identical names were already added to the batch.',
+        });
+      }
       return [...prev, ...filtered];
     });
   };
@@ -65,11 +69,6 @@ export const DecryptPage: React.FC = () => {
     if (dir) {
       setCustomPath(dir);
     }
-  };
-
-  const handleQuickLoadEncryptedDemos = () => {
-    const demos = desktopService.getSampleDemoFiles(true);
-    handleFilesAdded(demos);
   };
 
   const isFormValid = selectedFiles.length > 0 && password.length > 0;
@@ -125,17 +124,6 @@ export const DecryptPage: React.FC = () => {
             Authenticate and restore encrypted archives and files with their original master password.
           </p>
         </div>
-
-        {selectedFiles.length === 0 && (
-          <Button
-            size="xs"
-            variant="outline"
-            icon={<Sparkles className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />}
-            onClick={handleQuickLoadEncryptedDemos}
-          >
-            Insert Sample .enc Files
-          </Button>
-        )}
       </div>
 
       <form onSubmit={handleDecryptSubmit} className="space-y-6">
@@ -164,7 +152,7 @@ export const DecryptPage: React.FC = () => {
               <KeyRound className="w-4 h-4 text-purple-600 dark:text-purple-400" />
               <h3 className="text-sm font-semibold text-[#0F172A] dark:text-[#F8FAFC]">Decryption Key</h3>
             </div>
-            <span className="text-[11px] text-[#64748B] font-mono">Poly1305 MAC Verified</span>
+            <span className="text-[11px] text-[#64748B] font-mono">GCM MAC Authentication</span>
           </div>
 
           <div className="space-y-2 max-w-md">
@@ -173,7 +161,6 @@ export const DecryptPage: React.FC = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Enter password used during encryption"
-              helperText="Enter password (Tip: type 'wrong' to test simulated MAC mismatch failure)"
             />
           </div>
         </div>
@@ -203,9 +190,9 @@ export const DecryptPage: React.FC = () => {
                 className="mt-0.5 text-purple-600 focus:ring-purple-500"
               />
               <div>
-                <div className="font-semibold text-[#1E293B] dark:text-[#CBD5E1]">Same folder as encrypted file</div>
+                <div className="font-semibold text-[#1E293B] dark:text-[#CBD5E1]">Save / Download Decrypted File</div>
                 <div className="text-[11px] text-[#64748B] mt-0.5">
-                  Restores original extension automatically.
+                  Restores original filename and extension automatically.
                 </div>
               </div>
             </label>
@@ -225,7 +212,7 @@ export const DecryptPage: React.FC = () => {
                 className="mt-0.5 text-purple-600 focus:ring-purple-500"
               />
               <div className="min-w-0 flex-1">
-                <div className="font-semibold text-[#1E293B] dark:text-[#CBD5E1]">Custom Extracted Folder</div>
+                <div className="font-semibold text-[#1E293B] dark:text-[#CBD5E1]">Custom Destination Folder</div>
                 <div className="text-[11px] text-[#64748B] font-mono truncate mt-0.5" title={customPath}>
                   {customPath}
                 </div>
