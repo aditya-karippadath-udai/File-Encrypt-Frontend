@@ -39,11 +39,11 @@ export const QueuePage: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl font-bold text-slate-100 flex items-center gap-2">
-            <ListOrdered className="w-5 h-5 text-blue-400" />
+          <h1 className="text-xl font-bold text-[#0F172A] dark:text-slate-100 flex items-center gap-2">
+            <ListOrdered className="w-5 h-5 text-[#2563EB] dark:text-blue-400" />
             Operation Queue
           </h1>
-          <p className="text-xs text-slate-400 mt-0.5">
+          <p className="text-xs text-[#64748B] dark:text-slate-400 mt-0.5">
             Real-time batch execution pipeline and throughput monitor.
           </p>
         </div>
@@ -52,7 +52,7 @@ export const QueuePage: React.FC = () => {
           <Button
             size="sm"
             variant="outline"
-            icon={<Sparkles className="w-3.5 h-3.5 text-purple-400" />}
+            icon={<Sparkles className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />}
             onClick={handleInjectSampleBatch}
             title="Inject 3 test files into active queue"
           >
@@ -75,8 +75,8 @@ export const QueuePage: React.FC = () => {
 
       {/* Filter Tabs & Count */}
       {operations.length > 0 && (
-        <div className="flex items-center justify-between gap-2 border-b border-[#1F2937] pb-3">
-          <div className="flex items-center gap-1.5 bg-[#090D12]/80 p-1 rounded-lg border border-[#1F2937]">
+        <div className="flex items-center justify-between gap-2 border-b border-slate-200 dark:border-[#1F2937] pb-3">
+          <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-[#090D12]/80 p-1 rounded-lg border border-slate-200 dark:border-[#1F2937]">
             {(['all', 'active', 'completed', 'failed'] as const).map((tab) => {
               const count =
                 tab === 'all'
@@ -95,8 +95,8 @@ export const QueuePage: React.FC = () => {
                   onClick={() => setFilter(tab)}
                   className={`px-3 py-1 text-xs font-semibold rounded-md transition-all capitalize cursor-pointer ${
                     filter === tab
-                      ? 'bg-[#2563EB]/20 text-[#60A5FA] border border-[#2563EB]/40 shadow-xs'
-                      : 'text-[#64748B] hover:text-[#CBD5E1] border border-transparent'
+                      ? 'bg-white dark:bg-[#2563EB]/20 text-[#2563EB] dark:text-[#60A5FA] border border-slate-200 dark:border-[#2563EB]/40 shadow-xs'
+                      : 'text-[#64748B] hover:text-[#0F172A] dark:hover:text-[#CBD5E1] border border-transparent'
                   }`}
                 >
                   {tab} ({count})
@@ -113,12 +113,12 @@ export const QueuePage: React.FC = () => {
 
       {/* Empty State */}
       {operations.length === 0 ? (
-        <div className="p-12 bg-[#0D1117]/70 backdrop-blur-md border border-[#1F2937] rounded-2xl text-center flex flex-col items-center justify-center space-y-4">
-          <div className="w-16 h-16 rounded-2xl bg-[#2563EB]/10 border border-[#2563EB]/30 flex items-center justify-center text-[#60A5FA] shadow-xl">
+        <div className="p-12 bg-white/80 dark:bg-[#0D1117]/70 backdrop-blur-md border border-slate-200 dark:border-[#1F2937] rounded-2xl text-center flex flex-col items-center justify-center space-y-4 shadow-xs">
+          <div className="w-16 h-16 rounded-2xl bg-[#2563EB]/10 border border-[#2563EB]/30 flex items-center justify-center text-[#2563EB] dark:text-[#60A5FA] shadow-xl">
             <Shield className="w-8 h-8" />
           </div>
           <div>
-            <h3 className="text-base font-semibold text-[#F8FAFC]">No active operations</h3>
+            <h3 className="text-base font-semibold text-[#0F172A] dark:text-[#F8FAFC]">No active operations</h3>
             <p className="text-xs text-[#64748B] max-w-sm mt-1">
               The queue is currently idle. Drop files to encrypt, decrypt, or test with sample items.
             </p>
@@ -135,7 +135,7 @@ export const QueuePage: React.FC = () => {
             <Button
               variant="secondary"
               size="sm"
-              icon={<Unlock className="w-4 h-4" />}
+              icon={<Unlock className="w-4 h-4 text-purple-600 dark:text-purple-400" />}
               onClick={() => setActiveTab('decrypt')}
             >
               Decrypt Files
@@ -143,7 +143,7 @@ export const QueuePage: React.FC = () => {
             <Button
               variant="outline"
               size="sm"
-              icon={<Sparkles className="w-4 h-4 text-purple-400" />}
+              icon={<Sparkles className="w-4 h-4 text-purple-600 dark:text-purple-400" />}
               onClick={handleInjectSampleBatch}
             >
               Test Demo Batch
@@ -158,7 +158,7 @@ export const QueuePage: React.FC = () => {
           ))}
 
           {filteredOps.length === 0 && (
-            <div className="p-8 text-center text-xs text-[#64748B] bg-[#0D1117]/70 backdrop-blur-md rounded-xl border border-[#1F2937]">
+            <div className="p-8 text-center text-xs text-[#64748B] bg-white/80 dark:bg-[#0D1117]/70 backdrop-blur-md rounded-xl border border-slate-200 dark:border-[#1F2937]">
               No operations match the selected filter.
             </div>
           )}

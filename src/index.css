@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @layer base {
   :root {
     --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
@@ -10,11 +12,9 @@
     font-family: var(--font-sans);
     user-select: none;
     -webkit-user-select: none;
-    background-color: #05070A;
-    color: #F8FAFC;
   }
 
-  /* Custom subtle dark scrollbars for desktop feel */
+  /* Custom subtle scrollbars for desktop feel */
   ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
@@ -23,10 +23,16 @@
     background: transparent;
   }
   ::-webkit-scrollbar-thumb {
-    background: #1F2937;
+    background: #CBD5E1;
     border-radius: 9999px;
   }
+  .dark ::-webkit-scrollbar-thumb {
+    background: #1F2937;
+  }
   ::-webkit-scrollbar-thumb:hover {
+    background: #94A3B8;
+  }
+  .dark ::-webkit-scrollbar-thumb:hover {
     background: #374151;
   }
 }
@@ -37,17 +43,15 @@
 
 /* Frosted glass glow utilities */
 .glass-panel {
-  background-color: rgba(13, 17, 23, 0.65);
+  background-color: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid #1F2937;
+  border: 1px solid #E2E8F0;
 }
 
-.glass-panel-hover {
-  transition: all 0.2s ease-in-out;
+.dark .glass-panel {
+  background-color: rgba(13, 17, 23, 0.65);
+  border-color: #1F2937;
 }
-.glass-panel-hover:hover {
-  border-color: rgba(59, 130, 246, 0.4);
-  background-color: rgba(13, 17, 23, 0.8);
-}
+
 

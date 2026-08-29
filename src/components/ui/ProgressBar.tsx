@@ -42,7 +42,7 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
       aria-valuemin={0}
       aria-valuemax={100}
       className={cn(
-        'w-full bg-[#111827] rounded-full overflow-hidden border border-slate-800/80 relative',
+        'w-full bg-slate-200 dark:bg-[#111827] rounded-full overflow-hidden border border-slate-300/80 dark:border-slate-800/80 relative',
         sizes[size],
         className
       )}

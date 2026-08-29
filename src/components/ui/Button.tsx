@@ -25,17 +25,17 @@ export const Button: React.FC<ButtonProps> = ({
 
   const variants = {
     primary:
-      'bg-[#2563EB] hover:bg-[#3B82F6] active:bg-[#1D4ED8] text-white shadow-lg shadow-blue-900/30 border border-blue-400/25 font-semibold',
+      'bg-[#2563EB] hover:bg-[#1D4ED8] dark:hover:bg-[#3B82F6] active:bg-[#1E40AF] text-white shadow-md shadow-blue-500/20 border border-blue-400/30 font-semibold',
     secondary:
-      'bg-[#111827]/80 hover:bg-[#1F2937] active:bg-[#0D1117] text-[#CBD5E1] border border-[#1F2937] backdrop-blur-md shadow-sm',
+      'bg-slate-100 hover:bg-slate-200 dark:bg-[#111827]/80 dark:hover:bg-[#1F2937] active:bg-slate-300 dark:active:bg-[#0D1117] text-[#334155] dark:text-[#CBD5E1] border border-slate-300 dark:border-[#1F2937] backdrop-blur-md shadow-xs',
     outline:
-      'bg-transparent hover:bg-[#1F2937]/50 text-[#CBD5E1] border border-[#1F2937] hover:text-white backdrop-blur-xs',
+      'bg-transparent hover:bg-slate-100 dark:hover:bg-[#1F2937]/50 text-[#334155] dark:text-[#CBD5E1] border border-slate-300 dark:border-[#1F2937] hover:text-[#0F172A] dark:hover:text-white backdrop-blur-xs',
     ghost:
-      'bg-transparent hover:bg-[#1F2937]/40 active:bg-[#1F2937]/70 text-[#64748B] hover:text-[#CBD5E1] border border-transparent',
+      'bg-transparent hover:bg-slate-100 dark:hover:bg-[#1F2937]/40 active:bg-slate-200 dark:active:bg-[#1F2937]/70 text-[#64748B] hover:text-[#0F172A] dark:hover:text-[#CBD5E1] border border-transparent',
     danger:
-      'bg-[#EF4444]/15 hover:bg-[#EF4444]/25 active:bg-[#EF4444]/35 text-[#FCA5A5] border border-[#EF4444]/30 backdrop-blur-xs',
+      'bg-red-500/10 hover:bg-red-500/20 active:bg-red-500/30 text-red-600 dark:text-[#FCA5A5] border border-red-500/30 backdrop-blur-xs',
     success:
-      'bg-[#22C55E]/15 hover:bg-[#22C55E]/25 active:bg-[#22C55E]/35 text-[#86EFAC] border border-[#22C55E]/30 backdrop-blur-xs',
+      'bg-emerald-500/10 hover:bg-emerald-500/20 active:bg-emerald-500/30 text-emerald-600 dark:text-[#86EFAC] border border-emerald-500/30 backdrop-blur-xs',
   };
 
   const sizes = {

@@ -75,11 +75,11 @@ export const HistoryPage: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl font-bold text-slate-100 flex items-center gap-2">
-            <History className="w-5 h-5 text-blue-400" />
+          <h1 className="text-xl font-bold text-[#0F172A] dark:text-slate-100 flex items-center gap-2">
+            <History className="w-5 h-5 text-[#2563EB] dark:text-blue-400" />
             Activity History
           </h1>
-          <p className="text-xs text-slate-400 mt-0.5">
+          <p className="text-xs text-[#64748B] dark:text-slate-400 mt-0.5">
             Local audit logs of completed, decrypted, and failed operations.
           </p>
         </div>
@@ -98,9 +98,9 @@ export const HistoryPage: React.FC = () => {
               <Button
                 size="sm"
                 variant="ghost"
-                icon={<Trash2 className="w-3.5 h-3.5 text-red-400" />}
+                icon={<Trash2 className="w-3.5 h-3.5 text-red-500 dark:text-red-400" />}
                 onClick={() => setIsClearModalOpen(true)}
-                className="text-red-400 hover:text-red-300"
+                className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300"
               >
                 Clear
               </Button>
@@ -110,9 +110,9 @@ export const HistoryPage: React.FC = () => {
       </div>
 
       {/* Filter & Search Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[#0D1117]/70 backdrop-blur-md p-3 rounded-xl border border-[#1F2937]">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white/80 dark:bg-[#0D1117]/70 backdrop-blur-md p-3 rounded-xl border border-slate-200 dark:border-[#1F2937] shadow-xs">
         {/* Filter Tabs */}
-        <div className="flex items-center gap-1 bg-[#090D12]/80 p-1 rounded-lg border border-[#1F2937] shrink-0">
+        <div className="flex items-center gap-1 bg-slate-100 dark:bg-[#090D12]/80 p-1 rounded-lg border border-slate-200 dark:border-[#1F2937] shrink-0">
           {(['all', 'encrypt', 'decrypt', 'failed'] as const).map((tab) => {
             const count =
               tab === 'all'
@@ -129,8 +129,8 @@ export const HistoryPage: React.FC = () => {
                 onClick={() => setFilter(tab)}
                 className={`px-3 py-1 text-xs font-semibold rounded-md transition-all capitalize cursor-pointer ${
                   filter === tab
-                    ? 'bg-[#2563EB]/20 text-[#60A5FA] border border-[#2563EB]/40 shadow-xs'
-                    : 'text-[#64748B] hover:text-[#CBD5E1] border border-transparent'
+                    ? 'bg-white dark:bg-[#2563EB]/20 text-[#2563EB] dark:text-[#60A5FA] border border-slate-200 dark:border-[#2563EB]/40 shadow-xs'
+                    : 'text-[#64748B] hover:text-[#0F172A] dark:hover:text-[#CBD5E1] border border-transparent'
                 }`}
               >
                 {tab === 'all'
@@ -154,26 +154,26 @@ export const HistoryPage: React.FC = () => {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search by file name, path, hash..."
-            className="w-full bg-[#090D12]/80 border border-[#1F2937] rounded-lg pl-9 pr-3 py-1.5 text-xs text-[#F8FAFC] placeholder:text-[#64748B] focus:outline-none focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB]"
+            className="w-full bg-slate-50 dark:bg-[#090D12]/80 border border-slate-200 dark:border-[#1F2937] rounded-lg pl-9 pr-3 py-1.5 text-xs text-[#0F172A] dark:text-[#F8FAFC] placeholder:text-[#64748B] focus:outline-none focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB]"
           />
         </div>
       </div>
 
       {/* History Items List */}
       {history.length === 0 ? (
-        <div className="p-12 bg-[#0D1117]/70 backdrop-blur-md border border-[#1F2937] rounded-2xl text-center flex flex-col items-center justify-center space-y-4">
-          <div className="w-16 h-16 rounded-2xl bg-[#2563EB]/10 border border-[#2563EB]/30 flex items-center justify-center text-[#60A5FA] shadow-xl">
+        <div className="p-12 bg-white/80 dark:bg-[#0D1117]/70 backdrop-blur-md border border-slate-200 dark:border-[#1F2937] rounded-2xl text-center flex flex-col items-center justify-center space-y-4 shadow-xs">
+          <div className="w-16 h-16 rounded-2xl bg-[#2563EB]/10 border border-[#2563EB]/30 flex items-center justify-center text-[#2563EB] dark:text-[#60A5FA] shadow-xl">
             <FileCheck className="w-8 h-8" />
           </div>
           <div>
-            <h3 className="text-base font-semibold text-[#F8FAFC]">No activity history</h3>
+            <h3 className="text-base font-semibold text-[#0F172A] dark:text-[#F8FAFC]">No activity history</h3>
             <p className="text-xs text-[#64748B] max-w-sm mt-1">
               Completed operations will automatically appear here with verified cryptographic audit logs.
             </p>
           </div>
         </div>
       ) : filteredHistory.length === 0 ? (
-        <div className="p-8 text-center text-xs text-[#64748B] bg-[#0D1117]/70 backdrop-blur-md rounded-xl border border-[#1F2937]">
+        <div className="p-8 text-center text-xs text-[#64748B] bg-white/80 dark:bg-[#0D1117]/70 backdrop-blur-md rounded-xl border border-slate-200 dark:border-[#1F2937]">
           No records match the current filter or search criteria.
         </div>
       ) : (
@@ -201,7 +201,7 @@ export const HistoryPage: React.FC = () => {
           </>
         }
       >
-        <p className="text-xs text-slate-300">
+        <p className="text-xs text-[#64748B] dark:text-slate-300">
           Note: This action only clears the session log in your interface. Your actual files on disk remain unaffected.
         </p>
       </Modal>

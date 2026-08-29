@@ -56,27 +56,27 @@ export const Modal: React.FC<ModalProps> = ({
         role="dialog"
         aria-modal="true"
         className={cn(
-          'relative w-full bg-[#0D1117] border border-slate-800 rounded-xl shadow-2xl overflow-hidden z-10 flex flex-col max-h-[90vh]',
+          'relative w-full bg-white dark:bg-[#0D1117] border border-slate-200 dark:border-slate-800 rounded-xl shadow-2xl overflow-hidden z-10 flex flex-col max-h-[90vh]',
           maxWidths[maxWidth],
           className
         )}
       >
         {/* Header */}
         {(title || description) && (
-          <div className="flex items-start justify-between p-5 border-b border-slate-800/80 shrink-0">
+          <div className="flex items-start justify-between p-5 border-b border-slate-200 dark:border-slate-800/80 shrink-0">
             <div>
               {typeof title === 'string' ? (
-                <h3 className="text-base font-semibold text-slate-100">{title}</h3>
+                <h3 className="text-base font-semibold text-[#0F172A] dark:text-slate-100">{title}</h3>
               ) : (
                 title
               )}
               {description && (
-                <p className="text-xs text-slate-400 mt-1">{description}</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{description}</p>
               )}
             </div>
             <button
               onClick={onClose}
-              className="text-slate-400 hover:text-slate-200 p-1.5 rounded-lg hover:bg-slate-800/60 transition-colors"
+              className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/60 transition-colors cursor-pointer"
               aria-label="Close dialog"
             >
               <X className="w-4 h-4" />
@@ -89,7 +89,7 @@ export const Modal: React.FC<ModalProps> = ({
 
         {/* Footer */}
         {footer && (
-          <div className="flex items-center justify-end gap-3 p-4 border-t border-slate-800/80 bg-[#090D12]/50 shrink-0">
+          <div className="flex items-center justify-end gap-3 p-4 border-t border-slate-200 dark:border-slate-800/80 bg-slate-50/80 dark:bg-[#090D12]/50 shrink-0">
             {footer}
           </div>
         )}

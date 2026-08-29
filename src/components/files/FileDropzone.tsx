@@ -88,10 +88,10 @@ export const FileDropzone: React.FC<FileDropzoneProps> = ({
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
         className={cn(
-          'relative border-2 border-dashed rounded-2xl p-8 flex flex-col items-center justify-center text-center transition-all duration-200 bg-[#0D1117]/65 backdrop-blur-md select-none cursor-pointer',
+          'relative border-2 border-dashed rounded-2xl p-8 flex flex-col items-center justify-center text-center transition-all duration-200 bg-white/80 dark:bg-[#0D1117]/65 backdrop-blur-md select-none cursor-pointer shadow-xs',
           isDragging
             ? 'border-[#3B82F6] bg-blue-500/10 scale-[0.99] shadow-lg shadow-blue-500/10'
-            : 'border-[#1F2937] hover:border-[#3B82F6]/60 hover:bg-[#0D1117]/80',
+            : 'border-slate-300 dark:border-[#1F2937] hover:border-[#3B82F6]/60 hover:bg-slate-50/90 dark:hover:bg-[#0D1117]/80',
           className
         )}
         onClick={handleBrowseClick}
@@ -110,19 +110,19 @@ export const FileDropzone: React.FC<FileDropzoneProps> = ({
           className={cn(
             'w-16 h-16 rounded-2xl flex items-center justify-center mb-4 transition-transform duration-300 group-hover:scale-105 border shadow-xl',
             isDragging
-              ? 'bg-[#2563EB]/20 border-[#3B82F6] text-[#60A5FA]'
-              : 'bg-[#1F2937] border-[#1F2937] text-[#60A5FA] shadow-blue-950/20'
+              ? 'bg-[#2563EB]/20 border-[#3B82F6] text-[#2563EB] dark:text-[#60A5FA]'
+              : 'bg-slate-100 dark:bg-[#1F2937] border-slate-200 dark:border-[#1F2937] text-[#2563EB] dark:text-[#60A5FA] shadow-blue-950/10'
           )}
         >
           {isDragging ? (
-            <UploadCloud className="w-8 h-8 animate-bounce text-[#60A5FA]" />
+            <UploadCloud className="w-8 h-8 animate-bounce text-[#2563EB] dark:text-[#60A5FA]" />
           ) : (
-            <Shield className="w-8 h-8 text-[#60A5FA]" />
+            <Shield className="w-8 h-8 text-[#2563EB] dark:text-[#60A5FA]" />
           )}
         </div>
 
         {/* Main Copy */}
-        <h3 className="text-base font-semibold text-[#F8FAFC] mb-1 tracking-tight">
+        <h3 className="text-base font-semibold text-[#0F172A] dark:text-[#F8FAFC] mb-1 tracking-tight">
           {title || (isDragging ? 'Release to add files' : 'Drop files here')}
         </h3>
         <p className="text-xs text-[#64748B] max-w-sm mb-4">
@@ -144,7 +144,7 @@ export const FileDropzone: React.FC<FileDropzoneProps> = ({
             <Button
               size="sm"
               variant="secondary"
-              icon={<Sparkles className="w-3.5 h-3.5 text-purple-400" />}
+              icon={<Sparkles className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />}
               onClick={handleLoadSamples}
               title="Inject realistic demo test files"
             >
@@ -154,8 +154,8 @@ export const FileDropzone: React.FC<FileDropzoneProps> = ({
         </div>
 
         {/* Privacy Guarantee Pill */}
-        <div className="mt-6 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#0D1117]/90 border border-[#1F2937] text-[11px] text-[#64748B] backdrop-blur-md">
-          <FileCheck className="w-3 h-3 text-[#22C55E]" />
+        <div className="mt-6 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-50 dark:bg-[#0D1117]/90 border border-slate-200 dark:border-[#1F2937] text-[11px] text-[#64748B] backdrop-blur-md">
+          <FileCheck className="w-3 h-3 text-[#16A34A] dark:text-[#22C55E]" />
           <span>Files stay entirely on your local device</span>
         </div>
       </div>

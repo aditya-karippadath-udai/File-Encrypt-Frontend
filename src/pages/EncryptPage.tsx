@@ -142,11 +142,11 @@ export const EncryptPage: React.FC = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-bold text-slate-100 flex items-center gap-2">
-            <Lock className="w-5 h-5 text-blue-400" />
+          <h1 className="text-xl font-bold text-[#0F172A] dark:text-slate-100 flex items-center gap-2">
+            <Lock className="w-5 h-5 text-[#2563EB] dark:text-blue-400" />
             Encrypt Files
           </h1>
-          <p className="text-xs text-slate-400 mt-0.5">
+          <p className="text-xs text-[#64748B] dark:text-slate-400 mt-0.5">
             Encrypt local files with authenticated XChaCha20-Poly1305 encryption.
           </p>
         </div>
@@ -155,7 +155,7 @@ export const EncryptPage: React.FC = () => {
           <Button
             size="xs"
             variant="outline"
-            icon={<Sparkles className="w-3.5 h-3.5 text-purple-400" />}
+            icon={<Sparkles className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />}
             onClick={handleQuickLoadDemos}
           >
             Insert Demo Files
@@ -182,11 +182,11 @@ export const EncryptPage: React.FC = () => {
         )}
 
         {/* Password & Security Configuration */}
-        <div className="p-5 bg-[#0D1117]/70 backdrop-blur-md border border-[#1F2937] rounded-xl space-y-4">
-          <div className="flex items-center justify-between pb-2 border-b border-[#1F2937]">
+        <div className="p-5 bg-white/80 dark:bg-[#0D1117]/70 backdrop-blur-md border border-slate-200 dark:border-[#1F2937] rounded-xl space-y-4 shadow-xs">
+          <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-[#1F2937]">
             <div className="flex items-center gap-2">
-              <ShieldCheck className="w-4 h-4 text-[#60A5FA]" />
-              <h3 className="text-sm font-semibold text-[#F8FAFC]">Encryption Password</h3>
+              <ShieldCheck className="w-4 h-4 text-[#2563EB] dark:text-[#60A5FA]" />
+              <h3 className="text-sm font-semibold text-[#0F172A] dark:text-[#F8FAFC]">Encryption Password</h3>
             </div>
             <span className="text-[11px] text-[#64748B] font-mono">
               XChaCha20-Poly1305 + Argon2id
@@ -224,10 +224,10 @@ export const EncryptPage: React.FC = () => {
         </div>
 
         {/* Output Settings */}
-        <div className="p-4 bg-[#0D1117]/70 backdrop-blur-md border border-[#1F2937] rounded-xl space-y-3">
-          <div className="flex items-center justify-between text-xs font-semibold text-[#F8FAFC]">
+        <div className="p-4 bg-white/80 dark:bg-[#0D1117]/70 backdrop-blur-md border border-slate-200 dark:border-[#1F2937] rounded-xl space-y-3 shadow-xs">
+          <div className="flex items-center justify-between text-xs font-semibold text-[#0F172A] dark:text-[#F8FAFC]">
             <span className="flex items-center gap-1.5">
-              <Folder className="w-4 h-4 text-[#60A5FA]" /> Output Location
+              <Folder className="w-4 h-4 text-[#2563EB] dark:text-[#60A5FA]" /> Output Location
             </span>
             <span className="text-[#64748B] font-mono text-[11px]">Desktop Target</span>
           </div>
@@ -236,8 +236,8 @@ export const EncryptPage: React.FC = () => {
             <label
               className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-all ${
                 outputFolderChoice === 'same'
-                  ? 'border-[#2563EB]/50 bg-[#2563EB]/10 text-[#F8FAFC]'
-                  : 'border-[#1F2937] bg-[#090D12]/80 text-[#64748B] hover:border-slate-700'
+                  ? 'border-[#2563EB]/50 bg-blue-500/10 text-[#0F172A] dark:text-[#F8FAFC]'
+                  : 'border-slate-200 dark:border-[#1F2937] bg-slate-50/70 dark:bg-[#090D12]/80 text-[#64748B] hover:border-slate-300 dark:hover:border-slate-700'
               }`}
             >
               <input
@@ -245,12 +245,12 @@ export const EncryptPage: React.FC = () => {
                 name="outputChoice"
                 checked={outputFolderChoice === 'same'}
                 onChange={() => setOutputFolderChoice('same')}
-                className="mt-0.5 text-blue-600 focus:ring-blue-500"
+                className="mt-0.5 text-[#2563EB] focus:ring-[#2563EB]"
               />
               <div>
-                <div className="font-semibold text-[#CBD5E1]">Same folder as original</div>
+                <div className="font-semibold text-[#1E293B] dark:text-[#CBD5E1]">Same folder as original</div>
                 <div className="text-[11px] text-[#64748B] mt-0.5">
-                  Appends <code className="font-mono text-[#60A5FA]">.enc</code> to the original filename.
+                  Appends <code className="font-mono text-[#2563EB] dark:text-[#60A5FA]">.enc</code> to the original filename.
                 </div>
               </div>
             </label>
@@ -258,8 +258,8 @@ export const EncryptPage: React.FC = () => {
             <label
               className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-all ${
                 outputFolderChoice === 'custom'
-                  ? 'border-[#2563EB]/50 bg-[#2563EB]/10 text-[#F8FAFC]'
-                  : 'border-[#1F2937] bg-[#090D12]/80 text-[#64748B] hover:border-slate-700'
+                  ? 'border-[#2563EB]/50 bg-blue-500/10 text-[#0F172A] dark:text-[#F8FAFC]'
+                  : 'border-slate-200 dark:border-[#1F2937] bg-slate-50/70 dark:bg-[#090D12]/80 text-[#64748B] hover:border-slate-300 dark:hover:border-slate-700'
               }`}
             >
               <input
@@ -267,10 +267,10 @@ export const EncryptPage: React.FC = () => {
                 name="outputChoice"
                 checked={outputFolderChoice === 'custom'}
                 onChange={() => setOutputFolderChoice('custom')}
-                className="mt-0.5 text-blue-600 focus:ring-blue-500"
+                className="mt-0.5 text-[#2563EB] focus:ring-[#2563EB]"
               />
               <div className="min-w-0 flex-1">
-                <div className="font-semibold text-[#CBD5E1]">Custom Vault Folder</div>
+                <div className="font-semibold text-[#1E293B] dark:text-[#CBD5E1]">Custom Vault Folder</div>
                 <div className="text-[11px] text-[#64748B] font-mono truncate mt-0.5" title={customPath}>
                   {customPath}
                 </div>
@@ -281,7 +281,7 @@ export const EncryptPage: React.FC = () => {
                       e.preventDefault();
                       handleChooseCustomDir();
                     }}
-                    className="mt-2 text-[11px] text-[#60A5FA] hover:text-[#93C5FD] font-medium underline underline-offset-2 cursor-pointer"
+                    className="mt-2 text-[11px] text-[#2563EB] dark:text-[#60A5FA] hover:text-blue-700 dark:hover:text-[#93C5FD] font-medium underline underline-offset-2 cursor-pointer"
                   >
                     Change directory
                   </button>
@@ -292,12 +292,12 @@ export const EncryptPage: React.FC = () => {
         </div>
 
         {/* Submit Bar */}
-        <div className="p-4 bg-[#090D12]/80 backdrop-blur-md border border-[#1F2937] rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="p-4 bg-white/80 dark:bg-[#090D12]/80 backdrop-blur-md border border-slate-200 dark:border-[#1F2937] rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xs">
           <div className="text-xs text-[#64748B] font-mono">
             {selectedFiles.length > 0 ? (
               <span>
                 {selectedFiles.length} file{selectedFiles.length > 1 ? 's' : ''} queued •{' '}
-                <strong className="text-[#CBD5E1] font-semibold">{formatBytes(totalBytes)}</strong>
+                <strong className="text-[#1E293B] dark:text-[#CBD5E1] font-semibold">{formatBytes(totalBytes)}</strong>
               </span>
             ) : (
               <span className="text-[#64748B]">No files selected</span>

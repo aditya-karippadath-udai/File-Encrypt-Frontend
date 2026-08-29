@@ -27,34 +27,34 @@ export const HistoryItemRow: React.FC<HistoryItemRowProps> = ({ item }) => {
   const isEnc = item.operation === 'encrypt';
 
   return (
-    <div className="p-3.5 bg-[#0D1117]/70 backdrop-blur-md border border-[#1F2937] rounded-xl hover:border-[#2563EB]/40 hover:bg-[#111827]/70 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 group">
+    <div className="p-3.5 bg-white/80 dark:bg-[#0D1117]/70 backdrop-blur-md border border-slate-200 dark:border-[#1F2937] rounded-xl hover:border-[#2563EB]/40 hover:bg-slate-50 dark:hover:bg-[#111827]/70 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 group shadow-xs">
       {/* File & Operation info */}
       <div
         className="flex items-center gap-3 min-w-0 flex-1 cursor-pointer"
         onClick={() => setInspectedItem({ kind: 'history', data: item })}
       >
-        <div className="w-8 h-8 rounded-lg bg-[#090D12]/80 border border-[#1F2937] flex items-center justify-center shrink-0">
+        <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-[#090D12]/80 border border-slate-200 dark:border-[#1F2937] flex items-center justify-center shrink-0">
           {isEnc ? (
-            <Lock className="w-4 h-4 text-[#60A5FA]" />
+            <Lock className="w-4 h-4 text-[#2563EB] dark:text-[#60A5FA]" />
           ) : (
-            <Unlock className="w-4 h-4 text-purple-400" />
+            <Unlock className="w-4 h-4 text-purple-600 dark:text-purple-400" />
           )}
         </div>
 
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-xs font-semibold text-[#F8FAFC] truncate group-hover:text-[#60A5FA] transition-colors">
+            <span className="text-xs font-semibold text-[#0F172A] dark:text-[#F8FAFC] truncate group-hover:text-[#2563EB] dark:group-hover:text-[#60A5FA] transition-colors">
               {item.fileName}
             </span>
             <Badge variant={isEnc ? 'primary' : 'purple'} size="sm">
               {isEnc ? 'Encrypted' : 'Decrypted'}
             </Badge>
             {item.status === 'completed' ? (
-              <Badge variant="success" size="sm" icon={<CheckCircle2 className="w-3 h-3 text-[#22C55E]" />}>
+              <Badge variant="success" size="sm" icon={<CheckCircle2 className="w-3 h-3 text-[#16A34A] dark:text-[#22C55E]" />}>
                 Success
               </Badge>
             ) : item.status === 'failed' ? (
-              <Badge variant="danger" size="sm" icon={<AlertCircle className="w-3 h-3 text-[#EF4444]" />}>
+              <Badge variant="danger" size="sm" icon={<AlertCircle className="w-3 h-3 text-[#DC2626] dark:text-[#EF4444]" />}>
                 Failed
               </Badge>
             ) : (
@@ -81,7 +81,7 @@ export const HistoryItemRow: React.FC<HistoryItemRowProps> = ({ item }) => {
       <div className="flex items-center gap-1.5 shrink-0 self-end sm:self-center">
         <button
           onClick={() => setInspectedItem({ kind: 'history', data: item })}
-          className="p-1.5 text-[#64748B] hover:text-[#CBD5E1] hover:bg-white/5 rounded-lg transition-colors cursor-pointer"
+          className="p-1.5 text-[#64748B] hover:text-[#0F172A] dark:hover:text-[#CBD5E1] hover:bg-slate-100 dark:hover:bg-white/5 rounded-lg transition-colors cursor-pointer"
           title="View metadata"
           aria-label="Inspect history item"
         >

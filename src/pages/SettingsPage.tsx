@@ -63,11 +63,11 @@ export const SettingsPage: React.FC = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-bold text-slate-100 flex items-center gap-2">
-            <Settings className="w-5 h-5 text-blue-400" />
+          <h1 className="text-xl font-bold text-[#0F172A] dark:text-slate-100 flex items-center gap-2">
+            <Settings className="w-5 h-5 text-[#2563EB] dark:text-blue-400" />
             Application Settings
           </h1>
-          <p className="text-xs text-slate-400 mt-0.5">
+          <p className="text-xs text-[#64748B] dark:text-slate-400 mt-0.5">
             Configure UI appearance, cryptographic parameters, and local file operations.
           </p>
         </div>
@@ -84,10 +84,10 @@ export const SettingsPage: React.FC = () => {
 
       <div className="space-y-5">
         {/* Appearance Section */}
-        <section className="p-5 bg-[#0D1117]/70 backdrop-blur-md border border-[#1F2937] rounded-xl space-y-4">
-          <div className="flex items-center gap-2 pb-2 border-b border-[#1F2937]">
-            <Sun className="w-4 h-4 text-amber-400" />
-            <h3 className="text-sm font-semibold text-[#F8FAFC]">Appearance</h3>
+        <section className="p-5 bg-white/80 dark:bg-[#0D1117]/70 backdrop-blur-md border border-slate-200 dark:border-[#1F2937] rounded-xl space-y-4 shadow-xs">
+          <div className="flex items-center gap-2 pb-2 border-b border-slate-200 dark:border-[#1F2937]">
+            <Sun className="w-4 h-4 text-amber-500 dark:text-amber-400" />
+            <h3 className="text-sm font-semibold text-[#0F172A] dark:text-[#F8FAFC]">Appearance</h3>
           </div>
 
           <div className="grid grid-cols-3 gap-3">
@@ -101,8 +101,8 @@ export const SettingsPage: React.FC = () => {
                 onClick={() => setTheme(t.id)}
                 className={`p-3 rounded-lg border flex flex-col items-center justify-center gap-2 text-xs font-semibold transition-all cursor-pointer ${
                   settings.theme === t.id
-                    ? 'border-[#2563EB]/80 bg-[#2563EB]/20 text-[#60A5FA] shadow-sm'
-                    : 'border-[#1F2937] bg-[#090D12]/80 text-[#64748B] hover:border-slate-700 hover:text-[#CBD5E1]'
+                    ? 'border-[#2563EB] bg-blue-500/10 text-[#2563EB] dark:text-[#60A5FA] shadow-xs'
+                    : 'border-slate-200 dark:border-[#1F2937] bg-slate-50/70 dark:bg-[#090D12]/80 text-[#64748B] hover:border-slate-300 dark:hover:border-slate-700 hover:text-[#0F172A] dark:hover:text-[#CBD5E1]'
                 }`}
               >
                 {t.icon}
@@ -113,11 +113,11 @@ export const SettingsPage: React.FC = () => {
         </section>
 
         {/* Cryptographic Information Section */}
-        <section className="p-5 bg-[#0D1117]/70 backdrop-blur-md border border-[#1F2937] rounded-xl space-y-4">
-          <div className="flex items-center justify-between pb-2 border-b border-[#1F2937]">
+        <section className="p-5 bg-white/80 dark:bg-[#0D1117]/70 backdrop-blur-md border border-slate-200 dark:border-[#1F2937] rounded-xl space-y-4 shadow-xs">
+          <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-[#1F2937]">
             <div className="flex items-center gap-2">
-              <Cpu className="w-4 h-4 text-[#60A5FA]" />
-              <h3 className="text-sm font-semibold text-[#F8FAFC]">Cryptographic Engine</h3>
+              <Cpu className="w-4 h-4 text-[#2563EB] dark:text-[#60A5FA]" />
+              <h3 className="text-sm font-semibold text-[#0F172A] dark:text-[#F8FAFC]">Cryptographic Engine</h3>
             </div>
             <Badge variant="primary" size="sm">
               Standard Spec
@@ -125,17 +125,17 @@ export const SettingsPage: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-            <div className="p-3 bg-[#090D12]/80 border border-[#1F2937] rounded-lg space-y-1">
+            <div className="p-3 bg-slate-50/70 dark:bg-[#090D12]/80 border border-slate-200 dark:border-[#1F2937] rounded-lg space-y-1">
               <div className="text-[#64748B] font-medium">Encryption Cipher</div>
-              <div className="font-mono text-[#F8FAFC] font-semibold">{settings.algorithm}</div>
+              <div className="font-mono text-[#0F172A] dark:text-[#F8FAFC] font-semibold">{settings.algorithm}</div>
               <p className="text-[11px] text-[#64748B]">
                 AEAD cipher with 192-bit extended nonce preventing nonce-reuse hazards.
               </p>
             </div>
 
-            <div className="p-3 bg-[#090D12]/80 border border-[#1F2937] rounded-lg space-y-1">
+            <div className="p-3 bg-slate-50/70 dark:bg-[#090D12]/80 border border-slate-200 dark:border-[#1F2937] rounded-lg space-y-1">
               <div className="text-[#64748B] font-medium">Key Derivation Function (KDF)</div>
-              <div className="font-mono text-[#F8FAFC] font-semibold">{settings.keyDerivation}</div>
+              <div className="font-mono text-[#0F172A] dark:text-[#F8FAFC] font-semibold">{settings.keyDerivation}</div>
               <p className="text-[11px] text-[#64748B]">
                 Winner of Password Hashing Competition; memory-hard resistant to GPU mining.
               </p>
@@ -144,16 +144,16 @@ export const SettingsPage: React.FC = () => {
         </section>
 
         {/* File Operation Options */}
-        <section className="p-5 bg-[#0D1117]/70 backdrop-blur-md border border-[#1F2937] rounded-xl space-y-4">
-          <div className="flex items-center gap-2 pb-2 border-b border-[#1F2937]">
-            <Folder className="w-4 h-4 text-[#60A5FA]" />
-            <h3 className="text-sm font-semibold text-[#F8FAFC]">File Output & Safety</h3>
+        <section className="p-5 bg-white/80 dark:bg-[#0D1117]/70 backdrop-blur-md border border-slate-200 dark:border-[#1F2937] rounded-xl space-y-4 shadow-xs">
+          <div className="flex items-center gap-2 pb-2 border-b border-slate-200 dark:border-[#1F2937]">
+            <Folder className="w-4 h-4 text-[#2563EB] dark:text-[#60A5FA]" />
+            <h3 className="text-sm font-semibold text-[#0F172A] dark:text-[#F8FAFC]">File Output & Safety</h3>
           </div>
 
           <div className="space-y-4 text-xs">
             {/* Output Behavior */}
             <div className="space-y-2">
-              <label className="text-[#CBD5E1] font-medium block">Default Output Location</label>
+              <label className="text-[#1E293B] dark:text-[#CBD5E1] font-medium block">Default Output Location</label>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                 {[
                   { id: 'same-folder' as OutputBehavior, label: 'Same folder as input' },
@@ -165,8 +165,8 @@ export const SettingsPage: React.FC = () => {
                     onClick={() => setOutputBehavior(b.id)}
                     className={`p-2.5 rounded-lg border text-left font-medium transition-all cursor-pointer ${
                       settings.outputBehavior === b.id
-                        ? 'border-[#2563EB]/80 bg-[#2563EB]/20 text-[#60A5FA]'
-                        : 'border-[#1F2937] bg-[#090D12]/80 text-[#64748B] hover:border-slate-700'
+                        ? 'border-[#2563EB] bg-blue-500/10 text-[#2563EB] dark:text-[#60A5FA]'
+                        : 'border-slate-200 dark:border-[#1F2937] bg-slate-50/70 dark:bg-[#090D12]/80 text-[#64748B] hover:border-slate-300 dark:hover:border-slate-700'
                     }`}
                   >
                     {b.label}
@@ -176,8 +176,8 @@ export const SettingsPage: React.FC = () => {
             </div>
 
             {settings.outputBehavior === 'custom-folder' && (
-              <div className="flex items-center gap-2 p-2 bg-[#090D12]/80 rounded-lg border border-[#1F2937]">
-                <span className="font-mono text-[#CBD5E1] truncate flex-1 pl-1">
+              <div className="flex items-center gap-2 p-2 bg-slate-50/70 dark:bg-[#090D12]/80 rounded-lg border border-slate-200 dark:border-[#1F2937]">
+                <span className="font-mono text-[#0F172A] dark:text-[#CBD5E1] truncate flex-1 pl-1">
                   {settings.customOutputPath}
                 </span>
                 <Button size="xs" variant="secondary" onClick={handleSelectCustomDir}>
@@ -187,10 +187,10 @@ export const SettingsPage: React.FC = () => {
             )}
 
             {/* Toggles */}
-            <div className="pt-2 border-t border-[#1F2937] space-y-3">
+            <div className="pt-2 border-t border-slate-200 dark:border-[#1F2937] space-y-3">
               <label className="flex items-center justify-between cursor-pointer">
                 <div>
-                  <div className="font-medium text-[#CBD5E1]">Preserve Original Files</div>
+                  <div className="font-medium text-[#1E293B] dark:text-[#CBD5E1]">Preserve Original Files</div>
                   <div className="text-[11px] text-[#64748B]">
                     Do not shred or remove original plain files after successful encryption.
                   </div>
@@ -199,13 +199,13 @@ export const SettingsPage: React.FC = () => {
                   type="checkbox"
                   checked={settings.preserveOriginal}
                   onChange={(e) => setPreserveOriginal(e.target.checked)}
-                  className="w-4 h-4 rounded text-[#2563EB] focus:ring-[#2563EB] border-[#1F2937] bg-[#090D12]"
+                  className="w-4 h-4 rounded text-[#2563EB] focus:ring-[#2563EB] border-slate-300 dark:border-[#1F2937] bg-white dark:bg-[#090D12]"
                 />
               </label>
 
               <label className="flex items-center justify-between cursor-pointer">
                 <div>
-                  <div className="font-medium text-[#CBD5E1]">Overwrite Protection</div>
+                  <div className="font-medium text-[#1E293B] dark:text-[#CBD5E1]">Overwrite Protection</div>
                   <div className="text-[11px] text-[#64748B]">
                     Prompt before replacing existing files with the same name.
                   </div>
@@ -214,13 +214,13 @@ export const SettingsPage: React.FC = () => {
                   type="checkbox"
                   checked={settings.overwriteProtection}
                   onChange={(e) => setOverwriteProtection(e.target.checked)}
-                  className="w-4 h-4 rounded text-[#2563EB] focus:ring-[#2563EB] border-[#1F2937] bg-[#090D12]"
+                  className="w-4 h-4 rounded text-[#2563EB] focus:ring-[#2563EB] border-slate-300 dark:border-[#1F2937] bg-white dark:bg-[#090D12]"
                 />
               </label>
 
               <label className="flex items-center justify-between cursor-pointer">
                 <div>
-                  <div className="font-medium text-[#CBD5E1]">Auto-Clear Queue on Complete</div>
+                  <div className="font-medium text-[#1E293B] dark:text-[#CBD5E1]">Auto-Clear Queue on Complete</div>
                   <div className="text-[11px] text-[#64748B]">
                     Automatically dismiss completed items from the queue.
                   </div>
@@ -229,7 +229,7 @@ export const SettingsPage: React.FC = () => {
                   type="checkbox"
                   checked={settings.autoClearQueue}
                   onChange={(e) => setAutoClearQueue(e.target.checked)}
-                  className="w-4 h-4 rounded text-[#2563EB] focus:ring-[#2563EB] border-[#1F2937] bg-[#090D12]"
+                  className="w-4 h-4 rounded text-[#2563EB] focus:ring-[#2563EB] border-slate-300 dark:border-[#1F2937] bg-white dark:bg-[#090D12]"
                 />
               </label>
             </div>
@@ -237,19 +237,19 @@ export const SettingsPage: React.FC = () => {
         </section>
 
         {/* Performance Options */}
-        <section className="p-5 bg-[#0D1117]/70 backdrop-blur-md border border-[#1F2937] rounded-xl space-y-4">
-          <div className="flex items-center gap-2 pb-2 border-b border-[#1F2937]">
-            <Zap className="w-4 h-4 text-[#60A5FA]" />
-            <h3 className="text-sm font-semibold text-[#F8FAFC]">Performance & Concurrency</h3>
+        <section className="p-5 bg-white/80 dark:bg-[#0D1117]/70 backdrop-blur-md border border-slate-200 dark:border-[#1F2937] rounded-xl space-y-4 shadow-xs">
+          <div className="flex items-center gap-2 pb-2 border-b border-slate-200 dark:border-[#1F2937]">
+            <Zap className="w-4 h-4 text-[#2563EB] dark:text-[#60A5FA]" />
+            <h3 className="text-sm font-semibold text-[#0F172A] dark:text-[#F8FAFC]">Performance & Concurrency</h3>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
             <div className="space-y-1.5">
-              <label className="font-medium text-[#CBD5E1]">Concurrent Operations</label>
+              <label className="font-medium text-[#1E293B] dark:text-[#CBD5E1]">Concurrent Operations</label>
               <select
                 value={settings.concurrency}
                 onChange={(e) => setConcurrency(Number(e.target.value))}
-                className="w-full bg-[#090D12]/80 border border-[#1F2937] rounded-lg p-2 text-[#F8FAFC] focus:outline-none focus:border-[#2563EB]"
+                className="w-full bg-slate-50 dark:bg-[#090D12]/80 border border-slate-200 dark:border-[#1F2937] rounded-lg p-2 text-[#0F172A] dark:text-[#F8FAFC] focus:outline-none focus:border-[#2563EB]"
               >
                 <option value={1}>1 Worker (Sequential)</option>
                 <option value={2}>2 Workers (Balanced)</option>
@@ -262,11 +262,11 @@ export const SettingsPage: React.FC = () => {
             </div>
 
             <div className="space-y-1.5">
-              <label className="font-medium text-[#CBD5E1]">Chunk Buffer Size</label>
+              <label className="font-medium text-[#1E293B] dark:text-[#CBD5E1]">Chunk Buffer Size</label>
               <select
                 value={settings.chunkSizeMb}
                 onChange={(e) => setChunkSizeMb(Number(e.target.value))}
-                className="w-full bg-[#090D12]/80 border border-[#1F2937] rounded-lg p-2 text-[#F8FAFC] focus:outline-none focus:border-[#2563EB]"
+                className="w-full bg-slate-50 dark:bg-[#090D12]/80 border border-slate-200 dark:border-[#1F2937] rounded-lg p-2 text-[#0F172A] dark:text-[#F8FAFC] focus:outline-none focus:border-[#2563EB]"
               >
                 <option value={1}>1 MB (Low Memory)</option>
                 <option value={4}>4 MB (Recommended)</option>
@@ -281,12 +281,12 @@ export const SettingsPage: React.FC = () => {
         </section>
 
         {/* Privacy Section */}
-        <section className="p-5 bg-[#090D12]/80 backdrop-blur-md border border-[#2563EB]/30 rounded-xl space-y-2">
+        <section className="p-5 bg-white/80 dark:bg-[#090D12]/80 backdrop-blur-md border border-[#2563EB]/30 rounded-xl space-y-2 shadow-xs">
           <div className="flex items-center gap-2">
-            <ShieldCheck className="w-4 h-4 text-[#22C55E]" />
-            <h3 className="text-sm font-semibold text-[#F8FAFC]">Local Processing Guarantee</h3>
+            <ShieldCheck className="w-4 h-4 text-[#16A34A] dark:text-[#22C55E]" />
+            <h3 className="text-sm font-semibold text-[#0F172A] dark:text-[#F8FAFC]">Local Processing Guarantee</h3>
           </div>
-          <p className="text-xs text-[#CBD5E1] leading-relaxed">
+          <p className="text-xs text-[#64748B] dark:text-[#CBD5E1] leading-relaxed">
             Your files and master passwords are processed entirely on your local machine. No file data,
             passwords, or cryptographic hashes are ever transmitted over the network or stored on remote servers.
           </p>

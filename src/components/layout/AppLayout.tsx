@@ -50,11 +50,11 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
   }, [setActiveTab]);
 
   return (
-    <div className="flex h-screen w-screen bg-[#05070A] text-[#F8FAFC] overflow-hidden relative selection:bg-blue-500/30">
+    <div className="flex h-screen w-screen bg-[#F4F6F9] dark:bg-[#05070A] text-[#0F172A] dark:text-[#F8FAFC] overflow-hidden relative selection:bg-blue-500/30 transition-colors duration-200">
       {/* Ambient background glows for frosted glass reflection */}
-      <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl pointer-events-none -z-10" />
-      <div className="absolute bottom-10 right-1/4 w-[30rem] h-[30rem] bg-indigo-600/5 rounded-full blur-3xl pointer-events-none -z-10" />
-      <div className="absolute top-1/3 right-10 w-72 h-72 bg-purple-600/5 rounded-full blur-3xl pointer-events-none -z-10" />
+      <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-500/10 dark:bg-blue-600/10 rounded-full blur-3xl pointer-events-none -z-10" />
+      <div className="absolute bottom-10 right-1/4 w-[30rem] h-[30rem] bg-indigo-500/5 dark:bg-indigo-600/5 rounded-full blur-3xl pointer-events-none -z-10" />
+      <div className="absolute top-1/3 right-10 w-72 h-72 bg-purple-500/5 dark:bg-purple-600/5 rounded-full blur-3xl pointer-events-none -z-10" />
 
       {/* Collapsible Desktop Sidebar */}
       <Sidebar />
