@@ -4,6 +4,7 @@ import { Header } from './Header';
 import { ToastContainer } from '../ui/ToastContainer';
 import { FileDetailsModal } from '../files/FileDetailsModal';
 import { useUIStore } from '../../stores/useUIStore';
+import { useEngineStore } from '../../stores/useEngineStore';
 import { ActiveTab } from '../../types';
 
 export interface AppLayoutProps {
@@ -12,6 +13,12 @@ export interface AppLayoutProps {
 
 export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
   const { setActiveTab } = useUIStore();
+  const { checkHealth } = useEngineStore();
+
+  // Run backend IPC handshake & health check on startup
+  useEffect(() => {
+    checkHealth();
+  }, [checkHealth]);
 
   // Keyboard shortcut listener for desktop productivity
   useEffect(() => {

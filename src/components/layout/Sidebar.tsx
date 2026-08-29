@@ -16,6 +16,7 @@ import {
 import { useUIStore } from '../../stores/useUIStore';
 import { useQueueStore } from '../../stores/useQueueStore';
 import { useSettingsStore } from '../../stores/useSettingsStore';
+import { useEngineStore } from '../../stores/useEngineStore';
 import { ActiveTab } from '../../types';
 import { cn } from '../../utils/cn';
 
@@ -30,6 +31,7 @@ export const Sidebar: React.FC = () => {
   const { activeTab, setActiveTab, isSidebarCollapsed, toggleSidebar } = useUIStore();
   const { operations } = useQueueStore();
   const { settings, setTheme } = useSettingsStore();
+  const { connectionState, checkHealth, appInfo } = useEngineStore();
 
   const activeQueueCount = operations.filter(
     (op) => op.status === 'processing' || op.status === 'waiting' || op.status === 'paused'
@@ -148,31 +150,74 @@ export const Sidebar: React.FC = () => {
       {/* Bottom Section */}
       <div className="p-3 border-t border-[#E2E8F0] dark:border-[#1F2937] space-y-2.5">
         {isSidebarCollapsed ? (
-          <button
-            onClick={toggleSidebar}
-            className="w-full flex justify-center text-[#64748B] hover:text-[#0F172A] dark:hover:text-[#CBD5E1] p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-[#1F2937]/50 transition-colors cursor-pointer"
-            title="Expand sidebar"
-          >
-            <PanelLeftOpen className="w-4 h-4" />
-          </button>
+          <div className="flex flex-col items-center gap-2">
+            <div
+              className={cn(
+                'w-2.5 h-2.5 rounded-full',
+                connectionState === 'connected' && 'bg-[#16A34A] dark:bg-[#22C55E] shadow-[0_0_8px_rgba(34,197,94,0.6)]',
+                connectionState === 'browser' && 'bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]',
+                connectionState === 'connecting' && 'bg-amber-400 animate-ping',
+                connectionState === 'unavailable' && 'bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.5)]'
+              )}
+              title={
+                connectionState === 'connected'
+                  ? 'Desktop Engine Connected (Tauri 2.x Rust)'
+                  : connectionState === 'browser'
+                  ? 'Browser Mode (Mock desktop services active)'
+                  : connectionState === 'connecting'
+                  ? 'Connecting to Desktop Engine...'
+                  : 'Desktop Engine Unavailable'
+              }
+            />
+            <button
+              onClick={toggleSidebar}
+              className="w-full flex justify-center text-[#64748B] hover:text-[#0F172A] dark:hover:text-[#CBD5E1] p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-[#1F2937]/50 transition-colors cursor-pointer"
+              title="Expand sidebar"
+            >
+              <PanelLeftOpen className="w-4 h-4" />
+            </button>
+          </div>
         ) : (
           <>
-            {/* Privacy indicator */}
+            {/* Backend Engine Status Indicator */}
             <div className="bg-slate-50/80 dark:bg-[#0D1117]/80 border border-[#E2E8F0] dark:border-[#1F2937] rounded-xl p-3 backdrop-blur-md flex flex-col gap-1.5 shadow-xs">
               <div className="flex items-center justify-between">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-[#64748B]">
-                  Privacy Mode
+                  {connectionState === 'connected'
+                    ? 'Desktop Engine'
+                    : connectionState === 'browser'
+                    ? 'Runtime Mode'
+                    : 'Engine Status'}
                 </span>
-                <div className="w-2 h-2 rounded-full bg-[#16A34A] dark:bg-[#22C55E] shrink-0 shadow-[0_0_8px_rgba(34,197,94,0.5)]" />
+                <div
+                  className={cn(
+                    'w-2 h-2 rounded-full shrink-0',
+                    connectionState === 'connected' && 'bg-[#16A34A] dark:bg-[#22C55E] shadow-[0_0_8px_rgba(34,197,94,0.6)]',
+                    connectionState === 'browser' && 'bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]',
+                    connectionState === 'connecting' && 'bg-amber-400 animate-pulse',
+                    connectionState === 'unavailable' && 'bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.5)]'
+                  )}
+                />
               </div>
-              <p className="text-[11px] text-[#475569] dark:text-[#CBD5E1] leading-tight">
-                Local-only security active. Zero cloud telemetry.
+              <p className="text-[11px] font-medium text-[#1E293B] dark:text-[#E2E8F0] leading-tight">
+                {connectionState === 'connected' && 'Desktop Engine Connected'}
+                {connectionState === 'browser' && 'Browser Mode'}
+                {connectionState === 'connecting' && 'Connecting to Engine...'}
+                {connectionState === 'unavailable' && 'Desktop Engine Unavailable'}
+              </p>
+              <p className="text-[10px] text-[#64748B] dark:text-[#94A3B8] leading-tight">
+                {connectionState === 'connected' && 'Tauri 2.x Rust core active.'}
+                {connectionState === 'browser' && 'Mock desktop services active.'}
+                {connectionState === 'connecting' && 'Verifying IPC bridge...'}
+                {connectionState === 'unavailable' && 'Some desktop features may be limited.'}
               </p>
             </div>
 
             {/* Version & Theme switch */}
             <div className="flex items-center justify-between pt-1 px-1 text-[11px] text-[#64748B]">
-              <span className="font-mono text-[10px] text-[#64748B]">v1.0.0</span>
+              <span className="font-mono text-[10px] text-[#64748B]">
+                {appInfo ? `v${appInfo.version}` : 'v1.0.0'}
+              </span>
               <div className="flex items-center gap-1 bg-slate-100 dark:bg-[#111827] border border-[#E2E8F0] dark:border-[#1F2937] p-0.5 rounded-md">
                 <button
                   onClick={() => setTheme('dark')}

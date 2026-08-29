@@ -1,0 +1,22 @@
+[package]
+name = "file-encryption-tool"
+version = "1.0.0"
+description = "A secure desktop file encryption utility built with Tauri and React"
+authors = ["Aegis Security Team"]
+edition = "2021"
+
+[lib]
+name = "file_encryption_tool_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+chrono = { version = "0.4", features = ["serde"] }
+thiserror = "2.0"
+log = "0.4"
+env_logger = "0.11"

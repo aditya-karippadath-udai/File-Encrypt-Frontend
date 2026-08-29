@@ -3,12 +3,14 @@ import { ShieldCheck, Cpu, HardDrive, ListOrdered, Settings, Sun, Moon, Laptop }
 import { useUIStore } from '../../stores/useUIStore';
 import { useQueueStore } from '../../stores/useQueueStore';
 import { useSettingsStore } from '../../stores/useSettingsStore';
+import { useEngineStore } from '../../stores/useEngineStore';
 import { Badge } from '../ui/Badge';
 
 export const Header: React.FC = () => {
   const { setActiveTab } = useUIStore();
   const { operations } = useQueueStore();
   const { settings, setTheme } = useSettingsStore();
+  const { connectionState, isTauri } = useEngineStore();
 
   const processingCount = operations.filter((op) => op.status === 'processing').length;
   const waitingCount = operations.filter((op) => op.status === 'waiting').length;
@@ -43,14 +45,33 @@ export const Header: React.FC = () => {
 
         <div className="hidden md:flex items-center gap-2 ml-4 pl-4 border-l border-[#E2E8F0] dark:border-[#1F2937]">
           <Badge variant="neutral" size="sm" icon={<Cpu className="w-3 h-3 text-[#2563EB] dark:text-[#60A5FA]" />}>
-            <span className="font-mono text-[10px] text-[#475569] dark:text-[#CBD5E1]">XChaCha20-Poly1305</span>
+            <span className="font-mono text-[10px] text-[#475569] dark:text-[#CBD5E1]">AES-GCM / XChaCha</span>
           </Badge>
           <Badge variant="neutral" size="sm" icon={<HardDrive className="w-3 h-3 text-purple-600 dark:text-purple-400" />}>
             <span className="font-mono text-[10px] text-[#475569] dark:text-[#CBD5E1]">Argon2id KDF</span>
           </Badge>
-          <span className="inline-flex items-center gap-1.5 text-[11px] text-[#16A34A] dark:text-[#22C55E] font-medium ml-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#16A34A] dark:bg-[#22C55E] animate-pulse" />
-            Local Engine Active
+          <span
+            className={`inline-flex items-center gap-1.5 text-[11px] font-medium ml-1 ${
+              connectionState === 'connected'
+                ? 'text-[#16A34A] dark:text-[#22C55E]'
+                : connectionState === 'browser'
+                ? 'text-blue-600 dark:text-blue-400'
+                : 'text-amber-500'
+            }`}
+          >
+            <span
+              className={`w-1.5 h-1.5 rounded-full ${
+                connectionState === 'connected'
+                  ? 'bg-[#16A34A] dark:bg-[#22C55E] animate-pulse'
+                  : connectionState === 'browser'
+                  ? 'bg-blue-500'
+                  : 'bg-amber-400'
+              }`}
+            />
+            {connectionState === 'connected' && 'Tauri Engine Active'}
+            {connectionState === 'browser' && 'Browser Mode'}
+            {connectionState === 'connecting' && 'Connecting Engine...'}
+            {connectionState === 'unavailable' && 'Engine Offline'}
           </span>
         </div>
       </div>

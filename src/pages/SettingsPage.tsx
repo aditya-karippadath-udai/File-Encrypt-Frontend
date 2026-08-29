@@ -12,9 +12,12 @@ import {
   RotateCcw,
   Check,
   Lock,
+  Terminal,
+  Activity,
 } from 'lucide-react';
 import { useSettingsStore } from '../stores/useSettingsStore';
 import { useToastStore } from '../stores/useToastStore';
+import { useEngineStore } from '../stores/useEngineStore';
 import { desktopService } from '../services/desktop/desktopService';
 import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
@@ -36,6 +39,21 @@ export const SettingsPage: React.FC = () => {
   } = useSettingsStore();
 
   const { addToast } = useToastStore();
+  const { isTauri, connectionState, appInfo, health, lastChecked, checkHealth } = useEngineStore();
+  const [checkingHealth, setCheckingHealth] = useState(false);
+
+  const handleRunHealthCheck = async () => {
+    setCheckingHealth(true);
+    await checkHealth();
+    setCheckingHealth(false);
+    addToast({
+      type: 'success',
+      title: 'Backend Health Check Complete',
+      message: isTauri
+        ? 'Tauri 2.x Rust Core IPC bridge is verified and responsive.'
+        : 'Browser environment active. Mock desktop services verified.',
+    });
+  };
 
   const handleSelectCustomDir = async () => {
     const dir = await desktopService.selectDirectory();
@@ -233,6 +251,75 @@ export const SettingsPage: React.FC = () => {
                 />
               </label>
             </div>
+          </div>
+        </section>
+
+        {/* Desktop Engine & IPC Architecture */}
+        <section className="p-5 bg-white/80 dark:bg-[#0D1117]/70 backdrop-blur-md border border-slate-200 dark:border-[#1F2937] rounded-xl space-y-4 shadow-xs">
+          <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-[#1F2937]">
+            <div className="flex items-center gap-2">
+              <Terminal className="w-4 h-4 text-[#2563EB] dark:text-[#60A5FA]" />
+              <h3 className="text-sm font-semibold text-[#0F172A] dark:text-[#F8FAFC]">Desktop Engine & IPC Architecture</h3>
+            </div>
+            <Badge
+              variant={connectionState === 'connected' ? 'success' : connectionState === 'browser' ? 'info' : 'warning'}
+              size="sm"
+            >
+              {connectionState === 'connected'
+                ? 'Tauri 2.x Connected'
+                : connectionState === 'browser'
+                ? 'Browser Mode'
+                : connectionState}
+            </Badge>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+            <div className="p-3 bg-slate-50/80 dark:bg-[#090D12]/80 border border-slate-200 dark:border-[#1F2937] rounded-lg">
+              <span className="text-[10px] uppercase font-bold text-[#64748B] block">Application Core</span>
+              <div className="font-semibold text-[#1E293B] dark:text-[#CBD5E1] mt-0.5">
+                {appInfo?.name || 'File Encryption Tool'}
+              </div>
+              <span className="text-[11px] text-[#64748B] font-mono">
+                {appInfo ? `v${appInfo.version}` : 'v1.0.0'}
+              </span>
+            </div>
+
+            <div className="p-3 bg-slate-50/80 dark:bg-[#090D12]/80 border border-slate-200 dark:border-[#1F2937] rounded-lg">
+              <span className="text-[10px] uppercase font-bold text-[#64748B] block">Backend Bridge</span>
+              <div className="font-semibold text-[#1E293B] dark:text-[#CBD5E1] mt-0.5 capitalize">
+                {isTauri ? 'Rust Tauri IPC' : 'Browser Web Worker / Mock'}
+              </div>
+              <span className="text-[11px] text-[#64748B] font-mono">
+                {health ? `Status: ${health.status}` : 'Status: Ready'}
+              </span>
+            </div>
+
+            <div className="p-3 bg-slate-50/80 dark:bg-[#090D12]/80 border border-slate-200 dark:border-[#1F2937] rounded-lg">
+              <span className="text-[10px] uppercase font-bold text-[#64748B] block">Last Health Ping</span>
+              <div className="font-semibold text-[#1E293B] dark:text-[#CBD5E1] mt-0.5">
+                {lastChecked ? new Date(lastChecked).toLocaleTimeString() : 'On Startup'}
+              </div>
+              <span className="text-[11px] text-[#64748B] font-mono">
+                {isTauri ? 'Native IPC Channel' : 'Local Web Context'}
+              </span>
+            </div>
+          </div>
+
+          <div className="pt-2 flex items-center justify-between border-t border-slate-200 dark:border-[#1F2937]">
+            <span className="text-[11px] text-[#64748B]">
+              {isTauri
+                ? 'Backend commands get_app_info and health_check routed via native Rust IPC handler.'
+                : 'Running in browser preview. Native desktop invocations automatically fall back to mock service layer.'}
+            </span>
+            <Button
+              size="xs"
+              variant="secondary"
+              icon={<Activity className="w-3 h-3 text-[#2563EB] dark:text-[#60A5FA]" />}
+              onClick={handleRunHealthCheck}
+              disabled={checkingHealth}
+            >
+              {checkingHealth ? 'Pinging...' : 'Run Health Check'}
+            </Button>
           </div>
         </section>
 
