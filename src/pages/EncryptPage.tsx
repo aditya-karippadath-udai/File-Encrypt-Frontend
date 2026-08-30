@@ -15,6 +15,7 @@ import { PasswordInput } from '../components/password/PasswordInput';
 import { PasswordStrengthMeter } from '../components/password/PasswordStrengthMeter';
 import { Button } from '../components/ui/Button';
 import { fileService } from '../services/files';
+import { securityService } from '../services/security';
 import { formatBytes } from '../utils/formatters';
 
 export const EncryptPage: React.FC = () => {
@@ -82,30 +83,38 @@ export const EncryptPage: React.FC = () => {
 
   const totalBytes = selectedFiles.reduce((acc, f) => acc + f.size, 0);
 
-  const handleEncryptSubmit = (e: React.FormEvent) => {
+  const handleEncryptSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!isFormValid) {
-      if (selectedFiles.length === 0) {
-        addToast({
-          type: 'warning',
-          title: 'No files selected',
-          message: 'Please add at least one file to encrypt.',
-        });
-      } else if (!isPasswordValid) {
-        addToast({
-          type: 'warning',
-          title: 'Weak Password',
-          message: 'Password must be at least 8 characters long.',
-        });
-      } else if (!passwordsMatch) {
-        addToast({
-          type: 'error',
-          title: 'Password Mismatch',
-          message: 'The confirmation password does not match.',
-        });
-      }
+    if (selectedFiles.length === 0) {
+      addToast({
+        type: 'warning',
+        title: 'No files selected',
+        message: 'Please add at least one file to encrypt.',
+      });
       return;
+    }
+
+    const validation = await securityService.validatePassword({
+      password,
+      confirmPassword,
+    });
+
+    if (!validation.isValid) {
+      addToast({
+        type: 'error',
+        title: 'Password Validation Failed',
+        message: validation.errors.join(' ') || 'Please enter a valid matching password.',
+      });
+      return;
+    }
+
+    if (validation.warnings.length > 0) {
+      addToast({
+        type: 'warning',
+        title: 'Password Advisory',
+        message: validation.warnings[0],
+      });
     }
 
     // Add to queue
@@ -169,7 +178,7 @@ export const EncryptPage: React.FC = () => {
               <h3 className="text-sm font-semibold text-[#0F172A] dark:text-[#F8FAFC]">Encryption Password</h3>
             </div>
             <span className="text-[11px] text-[#64748B] font-mono">
-              AES-256-GCM + PBKDF2 (100k)
+              Argon2id (64MB, 3 iters, 256-bit)
             </span>
           </div>
 

@@ -19,6 +19,7 @@ import { useSettingsStore } from '../stores/useSettingsStore';
 import { useToastStore } from '../stores/useToastStore';
 import { useEngineStore } from '../stores/useEngineStore';
 import { desktopService } from '../services/desktop/desktopService';
+import { securityService } from '../services/security';
 import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
 import { ThemeMode, OutputBehavior } from '../types';
@@ -41,6 +42,8 @@ export const SettingsPage: React.FC = () => {
   const { addToast } = useToastStore();
   const { isTauri, connectionState, appInfo, health, lastChecked, checkHealth } = useEngineStore();
   const [checkingHealth, setCheckingHealth] = useState(false);
+  const [testingKdf, setTestingKdf] = useState(false);
+  const [kdfResult, setKdfResult] = useState<{ success: boolean; algorithm: string; keyLength: number; durationMs: number } | null>(null);
 
   const handleRunHealthCheck = async () => {
     setCheckingHealth(true);
@@ -53,6 +56,32 @@ export const SettingsPage: React.FC = () => {
         ? 'Tauri 2.x Rust Core IPC bridge is verified and responsive.'
         : 'Browser environment active. Mock desktop services verified.',
     });
+  };
+
+  const handleTestKeyDerivation = async () => {
+    setTestingKdf(true);
+    const start = performance.now();
+    try {
+      const res = await securityService.prepareKeyDerivation({
+        password: 'aegis-kdf-verification-test-passphrase',
+      });
+      const durationMs = Math.round(performance.now() - start);
+      setKdfResult({ ...res, durationMs });
+      addToast({
+        type: 'success',
+        title: 'Argon2id Key Derivation Verified',
+        message: `Derived 256-bit key in ${durationMs}ms with safe memory zeroization.`,
+      });
+    } catch (err: unknown) {
+      const errorMsg = err instanceof Error ? err.message : 'KDF execution failed';
+      addToast({
+        type: 'error',
+        title: 'Key Derivation Test Failed',
+        message: errorMsg,
+      });
+    } finally {
+      setTestingKdf(false);
+    }
   };
 
   const handleSelectCustomDir = async () => {
@@ -135,16 +164,16 @@ export const SettingsPage: React.FC = () => {
           <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-[#1F2937]">
             <div className="flex items-center gap-2">
               <Cpu className="w-4 h-4 text-[#2563EB] dark:text-[#60A5FA]" />
-              <h3 className="text-sm font-semibold text-[#0F172A] dark:text-[#F8FAFC]">Cryptographic Engine</h3>
+              <h3 className="text-sm font-semibold text-[#0F172A] dark:text-[#F8FAFC]">Cryptographic & Key Derivation Engine</h3>
             </div>
             <Badge variant="primary" size="sm">
-              Standard Spec
+              Argon2id + 256-bit AEAD
             </Badge>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
             <div className="p-3 bg-slate-50/70 dark:bg-[#090D12]/80 border border-slate-200 dark:border-[#1F2937] rounded-lg space-y-1">
-              <div className="text-[#64748B] font-medium">Encryption Cipher</div>
+              <div className="text-[#64748B] font-medium">Encryption Cipher Spec</div>
               <div className="font-mono text-[#0F172A] dark:text-[#F8FAFC] font-semibold">{settings.algorithm}</div>
               <p className="text-[11px] text-[#64748B]">
                 AEAD cipher with 192-bit extended nonce preventing nonce-reuse hazards.
@@ -153,11 +182,32 @@ export const SettingsPage: React.FC = () => {
 
             <div className="p-3 bg-slate-50/70 dark:bg-[#090D12]/80 border border-slate-200 dark:border-[#1F2937] rounded-lg space-y-1">
               <div className="text-[#64748B] font-medium">Key Derivation Function (KDF)</div>
-              <div className="font-mono text-[#0F172A] dark:text-[#F8FAFC] font-semibold">{settings.keyDerivation}</div>
+              <div className="font-mono text-[#0F172A] dark:text-[#F8FAFC] font-semibold">Argon2id (64MB, 3 iters, 4 lanes)</div>
               <p className="text-[11px] text-[#64748B]">
-                Winner of Password Hashing Competition; memory-hard resistant to GPU mining.
+                Memory-hard, GPU/ASIC-resistant derivation using cryptographically secure 128-bit random salt.
               </p>
             </div>
+          </div>
+
+          <div className="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-t border-slate-200 dark:border-[#1F2937]">
+            <div className="text-[11px] text-[#64748B]">
+              {kdfResult ? (
+                <span className="text-[#16A34A] dark:text-[#22C55E] font-medium">
+                  Verified: Derived {kdfResult.keyLength * 8}-bit key in {kdfResult.durationMs}ms ({kdfResult.algorithm}).
+                </span>
+              ) : (
+                <span>Test backend Argon2id key derivation execution with simulated input.</span>
+              )}
+            </div>
+            <Button
+              size="xs"
+              variant="secondary"
+              icon={<ShieldCheck className="w-3 h-3 text-[#2563EB] dark:text-[#60A5FA]" />}
+              onClick={handleTestKeyDerivation}
+              disabled={testingKdf}
+            >
+              {testingKdf ? 'Deriving Key...' : 'Test Key Derivation'}
+            </Button>
           </div>
         </section>
 

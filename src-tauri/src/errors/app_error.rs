@@ -36,6 +36,27 @@ pub enum AppError {
     #[error("Validation error: {0}")]
     ValidationError(String),
 
+    #[error("Password required: {0}")]
+    PasswordRequired(String),
+
+    #[error("Invalid password: {0}")]
+    InvalidPassword(String),
+
+    #[error("Password mismatch: {0}")]
+    PasswordMismatch(String),
+
+    #[error("Password exceeds maximum allowed length: {0}")]
+    PasswordTooLong(String),
+
+    #[error("Key derivation failed: {0}")]
+    KeyDerivationFailed(String),
+
+    #[error("Random generation failed: {0}")]
+    RandomGenerationFailed(String),
+
+    #[error("Invalid cryptographic configuration: {0}")]
+    InvalidCryptoConfiguration(String),
+
     #[error("System error: {0}")]
     SystemError(String),
 
@@ -71,6 +92,13 @@ impl Serialize for AppError {
             AppError::MetadataUnavailable(msg) => ("METADATA_UNAVAILABLE", msg.clone()),
             AppError::TemporaryFileError(msg) => ("TEMPORARY_FILE_ERROR", msg.clone()),
             AppError::ValidationError(msg) => ("VALIDATION_ERROR", msg.clone()),
+            AppError::PasswordRequired(msg) => ("PASSWORD_REQUIRED", msg.clone()),
+            AppError::InvalidPassword(msg) => ("INVALID_PASSWORD", msg.clone()),
+            AppError::PasswordMismatch(msg) => ("PASSWORD_MISMATCH", msg.clone()),
+            AppError::PasswordTooLong(msg) => ("PASSWORD_TOO_LONG", msg.clone()),
+            AppError::KeyDerivationFailed(msg) => ("KEY_DERIVATION_FAILED", msg.clone()),
+            AppError::RandomGenerationFailed(msg) => ("RANDOM_GENERATION_FAILED", msg.clone()),
+            AppError::InvalidCryptoConfiguration(msg) => ("INVALID_CRYPTO_CONFIGURATION", msg.clone()),
             AppError::SystemError(msg) => ("SYSTEM_ERROR", msg.clone()),
             AppError::InternalError(msg) => ("INTERNAL_ERROR", msg.clone()),
             AppError::Unavailable(msg) => ("SERVICE_UNAVAILABLE", msg.clone()),

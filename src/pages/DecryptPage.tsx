@@ -13,6 +13,7 @@ import { FileList } from '../components/files/FileList';
 import { PasswordInput } from '../components/password/PasswordInput';
 import { Button } from '../components/ui/Button';
 import { fileService } from '../services/files';
+import { securityService } from '../services/security';
 import { formatBytes } from '../utils/formatters';
 
 export const DecryptPage: React.FC = () => {
@@ -74,23 +75,25 @@ export const DecryptPage: React.FC = () => {
   const isFormValid = selectedFiles.length > 0 && password.length > 0;
   const totalBytes = selectedFiles.reduce((acc, f) => acc + f.size, 0);
 
-  const handleDecryptSubmit = (e: React.FormEvent) => {
+  const handleDecryptSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!isFormValid) {
-      if (selectedFiles.length === 0) {
-        addToast({
-          type: 'warning',
-          title: 'No files selected',
-          message: 'Please add at least one encrypted file to decrypt.',
-        });
-      } else if (!password) {
-        addToast({
-          type: 'warning',
-          title: 'Password required',
-          message: 'Please enter the decryption password.',
-        });
-      }
+    if (selectedFiles.length === 0) {
+      addToast({
+        type: 'warning',
+        title: 'No files selected',
+        message: 'Please add at least one encrypted file to decrypt.',
+      });
+      return;
+    }
+
+    const validation = await securityService.validatePassword({ password });
+    if (!validation.isValid) {
+      addToast({
+        type: 'error',
+        title: 'Password Required',
+        message: validation.errors[0] || 'Please enter the decryption password.',
+      });
       return;
     }
 
@@ -152,7 +155,7 @@ export const DecryptPage: React.FC = () => {
               <KeyRound className="w-4 h-4 text-purple-600 dark:text-purple-400" />
               <h3 className="text-sm font-semibold text-[#0F172A] dark:text-[#F8FAFC]">Decryption Key</h3>
             </div>
-            <span className="text-[11px] text-[#64748B] font-mono">GCM MAC Authentication</span>
+            <span className="text-[11px] text-[#64748B] font-mono">Argon2id + Key Authentication</span>
           </div>
 
           <div className="space-y-2 max-w-md">

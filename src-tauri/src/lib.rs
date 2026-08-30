@@ -1,4 +1,5 @@
 pub mod commands;
+pub mod crypto;
 pub mod errors;
 pub mod models;
 pub mod services;
@@ -6,7 +7,7 @@ pub mod state;
 pub mod utils;
 
 use log::info;
-use services::{FileService, SystemService};
+use services::{FileService, SecurityService, SystemService};
 use state::AppState;
 
 pub fn run() {
@@ -19,11 +20,13 @@ pub fn run() {
     let app_state = AppState::default();
     let system_service = SystemService::new();
     let file_service = FileService::new();
+    let security_service = SecurityService::new();
 
     tauri::Builder::default()
         .manage(app_state)
         .manage(system_service)
         .manage(file_service)
+        .manage(security_service)
         .invoke_handler(tauri::generate_handler![
             // System commands
             commands::get_app_info,
@@ -41,6 +44,9 @@ pub fn run() {
             commands::check_output_conflict,
             commands::prepare_temp_output,
             commands::cleanup_temp_file,
+            // Security & Key Derivation commands
+            commands::validate_password,
+            commands::prepare_key_derivation,
         ])
         .run(tauri::generate_context!())
         .expect("Error while running Tauri application");
