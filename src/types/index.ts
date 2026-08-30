@@ -11,6 +11,9 @@ export interface FileItem {
   lastModified: number;
   isEncrypted: boolean;
   rawFile?: File;
+  validationStatus?: 'ready' | 'invalid' | 'duplicate';
+  validationError?: string;
+  extension?: string;
 }
 
 export interface ProcessingProgress {

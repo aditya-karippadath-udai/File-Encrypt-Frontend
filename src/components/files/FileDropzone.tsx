@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { Shield, UploadCloud, FolderOpen, FileCheck } from 'lucide-react';
 import { FileItem } from '../../types';
-import { desktopService } from '../../services/desktop/desktopService';
+import { fileService } from '../../services/files';
 import { generateId } from '../../utils/formatters';
 import { Button } from '../ui/Button';
 import { cn } from '../../utils/cn';
@@ -65,7 +65,7 @@ export const FileDropzone: React.FC<FileDropzoneProps> = ({
   };
 
   const handleBrowseClick = async () => {
-    const selected = await desktopService.selectFiles({ encryptedOnly, multiple: true });
+    const selected = await fileService.selectFiles({ encryptedOnly, multiple: true });
     if (selected.length > 0) {
       onFilesSelected(selected);
     }

@@ -12,7 +12,7 @@ import { FileDropzone } from '../components/files/FileDropzone';
 import { FileList } from '../components/files/FileList';
 import { PasswordInput } from '../components/password/PasswordInput';
 import { Button } from '../components/ui/Button';
-import { desktopService } from '../services/desktop/desktopService';
+import { fileService } from '../services/files';
 import { formatBytes } from '../utils/formatters';
 
 export const DecryptPage: React.FC = () => {
@@ -65,7 +65,7 @@ export const DecryptPage: React.FC = () => {
   };
 
   const handleChooseCustomDir = async () => {
-    const dir = await desktopService.selectDirectory();
+    const dir = await fileService.selectOutputDirectory();
     if (dir) {
       setCustomPath(dir);
     }

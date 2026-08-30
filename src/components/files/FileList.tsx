@@ -104,6 +104,16 @@ export const FileList: React.FC<FileListProps> = ({
                       Encrypted
                     </span>
                   )}
+                  {file.validationStatus === 'invalid' && (
+                    <span className="px-1.5 py-0.2 rounded text-[10px] bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/25" title={file.validationError}>
+                      Invalid: {file.validationError || 'Failed Validation'}
+                    </span>
+                  )}
+                  {file.validationStatus === 'duplicate' && (
+                    <span className="px-1.5 py-0.2 rounded text-[10px] bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/25">
+                      Duplicate
+                    </span>
+                  )}
                 </div>
                 <div className="flex items-center gap-2 text-[11px] text-[#64748B] font-mono mt-0.5">
                   <span>{formatBytes(file.size)}</span>

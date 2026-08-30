@@ -2,6 +2,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { FileItem } from '../../types';
 import { AppInfo, DesktopService, DesktopServiceError, FileDialogOptions, HealthStatus } from './desktopService';
 import { mockDesktopService } from './mockDesktopService';
+import { FileMetadata } from '../files/fileService';
 
 /**
  * Tauri desktop implementation of DesktopService.
@@ -33,17 +34,41 @@ export class TauriDesktopService implements DesktopService {
   }
 
   /**
-   * Prompts user for file selection (delegates to browser-safe file picker for Phase 1)
+   * Prompts user for file selection via native file picker dialog
    */
   public async selectFiles(options?: FileDialogOptions): Promise<FileItem[]> {
-    return mockDesktopService.selectFiles(options);
+    try {
+      const metaList = await invoke<FileMetadata[]>('select_files', { options });
+      if (!metaList || metaList.length === 0) {
+        return [];
+      }
+
+      return metaList.map((meta) => ({
+        id: `native-file-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+        name: meta.name,
+        size: meta.sizeBytes,
+        type: meta.extension ? `file/${meta.extension}` : 'application/octet-stream',
+        path: meta.path,
+        lastModified: meta.modifiedAt ? new Date(meta.modifiedAt).getTime() : Date.now(),
+        isEncrypted: meta.isEncrypted,
+        validationStatus: 'ready',
+      }));
+    } catch (err: unknown) {
+      console.warn('Native select_files invoke failed, falling back to mock file picker', err);
+      return mockDesktopService.selectFiles(options);
+    }
   }
 
   /**
-   * Directory picker (delegates to browser-safe picker for Phase 1)
+   * Native directory picker dialog
    */
   public async selectDirectory(): Promise<string | null> {
-    return mockDesktopService.selectDirectory();
+    try {
+      return await invoke<string | null>('select_output_directory');
+    } catch (err: unknown) {
+      console.warn('Native select_output_directory invoke failed, falling back to mock folder picker', err);
+      return mockDesktopService.selectDirectory();
+    }
   }
 
   /**
