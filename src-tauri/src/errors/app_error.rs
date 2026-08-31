@@ -57,6 +57,33 @@ pub enum AppError {
     #[error("Invalid cryptographic configuration: {0}")]
     InvalidCryptoConfiguration(String),
 
+    #[error("Encryption failed: {0}")]
+    EncryptionFailed(String),
+
+    #[error("Invalid encryption request: {0}")]
+    InvalidEncryptionRequest(String),
+
+    #[error("Header creation failed: {0}")]
+    HeaderCreationFailed(String),
+
+    #[error("Header write failed: {0}")]
+    HeaderWriteFailed(String),
+
+    #[error("Invalid chunk configuration: {0}")]
+    InvalidChunkConfiguration(String),
+
+    #[error("Cryptographic operation failed: {0}")]
+    CryptographicOperationFailed(String),
+
+    #[error("Output write failed: {0}")]
+    OutputWriteFailed(String),
+
+    #[error("Finalization failed: {0}")]
+    FinalizationFailed(String),
+
+    #[error("Operation cancelled: {0}")]
+    Cancelled(String),
+
     #[error("System error: {0}")]
     SystemError(String),
 
@@ -99,6 +126,15 @@ impl Serialize for AppError {
             AppError::KeyDerivationFailed(msg) => ("KEY_DERIVATION_FAILED", msg.clone()),
             AppError::RandomGenerationFailed(msg) => ("RANDOM_GENERATION_FAILED", msg.clone()),
             AppError::InvalidCryptoConfiguration(msg) => ("INVALID_CRYPTO_CONFIGURATION", msg.clone()),
+            AppError::EncryptionFailed(msg) => ("ENCRYPTION_FAILED", msg.clone()),
+            AppError::InvalidEncryptionRequest(msg) => ("INVALID_ENCRYPTION_REQUEST", msg.clone()),
+            AppError::HeaderCreationFailed(msg) => ("HEADER_CREATION_FAILED", msg.clone()),
+            AppError::HeaderWriteFailed(msg) => ("HEADER_WRITE_FAILED", msg.clone()),
+            AppError::InvalidChunkConfiguration(msg) => ("INVALID_CHUNK_CONFIGURATION", msg.clone()),
+            AppError::CryptographicOperationFailed(msg) => ("CRYPTOGRAPHIC_OPERATION_FAILED", msg.clone()),
+            AppError::OutputWriteFailed(msg) => ("OUTPUT_WRITE_FAILED", msg.clone()),
+            AppError::FinalizationFailed(msg) => ("FINALIZATION_FAILED", msg.clone()),
+            AppError::Cancelled(msg) => ("CANCELLED", msg.clone()),
             AppError::SystemError(msg) => ("SYSTEM_ERROR", msg.clone()),
             AppError::InternalError(msg) => ("INTERNAL_ERROR", msg.clone()),
             AppError::Unavailable(msg) => ("SERVICE_UNAVAILABLE", msg.clone()),
