@@ -24,3 +24,4 @@ export const encryptionService = getEncryptionService();
 export * from './encryptionService';
 export * from './mockEncryptionService';
 export * from './tauriEncryptionService';
+export * from './encryptionEvents';

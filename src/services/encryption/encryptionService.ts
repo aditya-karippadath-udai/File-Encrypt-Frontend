@@ -1,4 +1,11 @@
-import { EncryptionOperation, ProcessingProgress, ProcessingResult } from '../../types';
+import {
+  BatchEncryptionOperation,
+  BatchOperationResult,
+  EncryptionOperation,
+  ProcessingProgress,
+  ProcessingResult,
+  StartBatchRequest,
+} from '../../types';
 
 export type ProgressCallback = (progress: ProcessingProgress) => void;
 
@@ -35,7 +42,27 @@ export interface NativeEncryptionResult {
  */
 export interface EncryptionService {
   /**
-   * Encrypts a single file operation
+   * Starts a batch encryption operation across multiple files with streaming progress and controlled concurrency.
+   */
+  startBatch(request: StartBatchRequest): Promise<BatchOperationResult>;
+
+  /**
+   * Cancels an individual job in an active batch.
+   */
+  cancelJob(operationId: string, jobId: string): Promise<void>;
+
+  /**
+   * Cancels an entire batch operation.
+   */
+  cancelBatch(operationId: string): Promise<void>;
+
+  /**
+   * Retrieves the current snapshot and status of a batch operation.
+   */
+  getOperationStatus(operationId: string): Promise<BatchEncryptionOperation>;
+
+  /**
+   * Encrypts a single file operation (Single-file helper/backward compatibility)
    */
   encryptFile(
     operation: EncryptionOperation,

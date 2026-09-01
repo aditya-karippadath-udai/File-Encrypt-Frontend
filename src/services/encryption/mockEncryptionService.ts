@@ -1,6 +1,18 @@
-import { EncryptionOperation, ProcessingProgress, ProcessingResult } from '../../types';
-import { EncryptionService, ProgressCallback } from './encryptionService';
+import {
+  BatchEncryptionJob,
+  BatchEncryptionOperation,
+  BatchJobStatus,
+  BatchOperationResult,
+  BatchOperationStatus,
+  EncryptionOperation,
+  JobResultItem,
+  ProcessingProgress,
+  ProcessingResult,
+  StartBatchRequest,
+} from '../../types';
 import { desktopService } from '../desktop/desktopService';
+import { mockEventBus } from './encryptionEvents';
+import { EncryptionService, ProgressCallback } from './encryptionService';
 
 const MAGIC_HEADER = new Uint8Array([0x41, 0x45, 0x47, 0x49, 0x53, 0x01]); // "AEGIS\x01"
 const SALT_LENGTH = 16;
@@ -9,12 +21,425 @@ const PBKDF2_ITERATIONS = 100000;
 
 /**
  * Browser mock implementation of EncryptionService.
- * Uses Web Crypto API in browser preview mode without invoking native Tauri backend commands.
- * CRITICAL: Browser mode does not load gigabyte-scale files into native Rust memory; it operates in simulated client sandbox.
+ * Simulates batch encryption with controlled concurrency, real-time progress events,
+ * and cooperative cancellation in browser preview mode.
  */
 export class MockEncryptionService implements EncryptionService {
   private pausedOperations = new Set<string>();
   private cancelledOperations = new Set<string>();
+  private cancelledJobs = new Set<string>();
+  private activeOperations = new Map<string, BatchEncryptionOperation>();
+
+  public async startBatch(request: StartBatchRequest): Promise<BatchOperationResult> {
+    const startTime = Date.now();
+    const opId = `op-${Math.random().toString(36).substring(2, 10)}`;
+    const startedAt = new Date().toISOString();
+
+    this.cancelledOperations.delete(opId);
+
+    // Create jobs
+    const jobs: BatchEncryptionJob[] = request.input_files.map((path, idx) => {
+      const filename = path.split('/').pop() || path.split('\\').pop() || `file_${idx + 1}`;
+      const rawFile = request.rawFiles?.find((f) => f.name === filename);
+      const size = rawFile ? rawFile.size : 1024 * 1024 * (idx + 1) * 2;
+
+      return {
+        job_id: `job-${Math.random().toString(36).substring(2, 10)}`,
+        operation_id: opId,
+        input_path: path,
+        status: 'queued',
+        total_bytes: size,
+        processed_bytes: 0,
+        progress_percentage: 0,
+        stage: 'Queued',
+        created_at: new Date().toISOString(),
+      };
+    });
+
+    const totalBytes = jobs.reduce((sum, j) => sum + j.total_bytes, 0);
+
+    const operation: BatchEncryptionOperation = {
+      operation_id: opId,
+      status: 'running',
+      total_files: jobs.length,
+      completed_files: 0,
+      failed_files: 0,
+      cancelled_files: 0,
+      total_bytes: totalBytes,
+      processed_bytes: 0,
+      created_at: startedAt,
+      started_at: startedAt,
+      jobs,
+    };
+
+    this.activeOperations.set(opId, operation);
+
+    // Emit initial operation status
+    mockEventBus.emitOperationStatus({
+      operation_id: opId,
+      total_files: operation.total_files,
+      completed_files: 0,
+      failed_files: 0,
+      cancelled_files: 0,
+      total_bytes: totalBytes,
+      processed_bytes: 0,
+      percentage: 0,
+      status: 'running',
+    });
+
+    const concurrency = Math.min(Math.max(request.concurrency || 2, 1), 4);
+    const queue = [...jobs];
+    const jobResults: JobResultItem[] = [];
+
+    // Worker pool runner
+    const runWorker = async () => {
+      while (queue.length > 0) {
+        if (this.cancelledOperations.has(opId)) {
+          // Cancel remaining jobs in queue
+          const unstartedJob = queue.shift();
+          if (unstartedJob) {
+            unstartedJob.status = 'cancelled';
+            unstartedJob.stage = 'Cancelled';
+            operation.cancelled_files += 1;
+            mockEventBus.emitJobProgress({
+              operation_id: opId,
+              job_id: unstartedJob.job_id,
+              input_path: unstartedJob.input_path,
+              bytes_processed: 0,
+              total_bytes: unstartedJob.total_bytes,
+              percentage: 0,
+              stage: 'Cancelled',
+              status: 'cancelled',
+            });
+            jobResults.push({
+              job_id: unstartedJob.job_id,
+              input_path: unstartedJob.input_path,
+              status: 'cancelled',
+              original_size: unstartedJob.total_bytes,
+              encrypted_size: 0,
+              duration_ms: 0,
+            });
+          }
+          continue;
+        }
+
+        const currentJob = queue.shift();
+        if (!currentJob) break;
+
+        const jobResult = await this.simulateJobExecution(opId, currentJob, request);
+        jobResults.push(jobResult);
+
+        // Update overall operation totals
+        let totalProcessed = 0;
+        let completedCount = 0;
+        let failedCount = 0;
+        let cancelledCount = 0;
+
+        for (const j of operation.jobs) {
+          totalProcessed += j.processed_bytes;
+          if (j.status === 'completed') completedCount += 1;
+          if (j.status === 'failed') failedCount += 1;
+          if (j.status === 'cancelled') cancelledCount += 1;
+        }
+
+        operation.processed_bytes = totalProcessed;
+        operation.completed_files = completedCount;
+        operation.failed_files = failedCount;
+        operation.cancelled_files = cancelledCount;
+
+        const overallPct =
+          operation.total_bytes > 0
+            ? Math.min(100, Math.round((totalProcessed / operation.total_bytes) * 100))
+            : 100;
+
+        mockEventBus.emitBatchProgress({
+          operation_id: opId,
+          total_files: operation.total_files,
+          completed_files: completedCount,
+          failed_files: failedCount,
+          cancelled_files: cancelledCount,
+          total_bytes: operation.total_bytes,
+          processed_bytes: totalProcessed,
+          percentage: overallPct,
+          status: operation.status,
+        });
+      }
+    };
+
+    const workers = Array.from({ length: concurrency }, () => runWorker());
+    await Promise.all(workers);
+
+    // Final operation state
+    let finalStatus: BatchOperationStatus = 'completed';
+    if (operation.cancelled_files > 0 || operation.failed_files > 0) {
+      if (operation.completed_files > 0) {
+        finalStatus = 'completed_with_errors';
+      } else if (operation.cancelled_files > 0 && operation.failed_files === 0) {
+        finalStatus = 'cancelled';
+      } else {
+        finalStatus = 'failed';
+      }
+    }
+    operation.status = finalStatus;
+    const completedAt = new Date().toISOString();
+    operation.completed_at = completedAt;
+
+    mockEventBus.emitOperationStatus({
+      operation_id: opId,
+      total_files: operation.total_files,
+      completed_files: operation.completed_files,
+      failed_files: operation.failed_files,
+      cancelled_files: operation.cancelled_files,
+      total_bytes: operation.total_bytes,
+      processed_bytes: operation.processed_bytes,
+      percentage:
+        operation.total_bytes > 0
+          ? Math.min(100, Math.round((operation.processed_bytes / operation.total_bytes) * 100))
+          : 100,
+      status: finalStatus,
+    });
+
+    return {
+      operation_id: opId,
+      status: finalStatus,
+      total_files: operation.total_files,
+      successful_files: operation.completed_files,
+      failed_files: operation.failed_files,
+      cancelled_files: operation.cancelled_files,
+      total_bytes: operation.total_bytes,
+      processed_bytes: operation.processed_bytes,
+      duration_ms: Date.now() - startTime,
+      started_at: startedAt,
+      completed_at: completedAt,
+      jobs: jobResults,
+    };
+  }
+
+  private async simulateJobExecution(
+    opId: string,
+    job: BatchEncryptionJob,
+    request: StartBatchRequest
+  ): Promise<JobResultItem> {
+    const jobStart = Date.now();
+    const isJobCancelled = () =>
+      this.cancelledOperations.has(opId) || this.cancelledJobs.has(job.job_id);
+
+    if (isJobCancelled()) {
+      job.status = 'cancelled';
+      job.stage = 'Cancelled';
+      mockEventBus.emitJobProgress({
+        operation_id: opId,
+        job_id: job.job_id,
+        input_path: job.input_path,
+        bytes_processed: 0,
+        total_bytes: job.total_bytes,
+        percentage: 0,
+        stage: 'Cancelled',
+        status: 'cancelled',
+      });
+      return {
+        job_id: job.job_id,
+        input_path: job.input_path,
+        status: 'cancelled',
+        original_size: job.total_bytes,
+        encrypted_size: 0,
+        duration_ms: 0,
+      };
+    }
+
+    // Stage 1: Preparing
+    job.status = 'preparing';
+    job.stage = 'Preparing';
+    mockEventBus.emitJobProgress({
+      operation_id: opId,
+      job_id: job.job_id,
+      input_path: job.input_path,
+      bytes_processed: 0,
+      total_bytes: job.total_bytes,
+      percentage: 5,
+      stage: 'Preparing',
+      status: 'preparing',
+    });
+    await new Promise((r) => setTimeout(r, 60));
+
+    if (isJobCancelled()) {
+      job.status = 'cancelled';
+      job.stage = 'Cancelled';
+      mockEventBus.emitJobProgress({
+        operation_id: opId,
+        job_id: job.job_id,
+        input_path: job.input_path,
+        bytes_processed: 0,
+        total_bytes: job.total_bytes,
+        percentage: 0,
+        stage: 'Cancelled',
+        status: 'cancelled',
+      });
+      return {
+        job_id: job.job_id,
+        input_path: job.input_path,
+        status: 'cancelled',
+        original_size: job.total_bytes,
+        encrypted_size: 0,
+        duration_ms: Date.now() - jobStart,
+      };
+    }
+
+    // Stage 2: Encrypting (chunked simulated progress)
+    job.status = 'encrypting';
+    job.stage = 'Encrypting';
+
+    const steps = 4;
+    for (let s = 1; s <= steps; s++) {
+      if (isJobCancelled()) {
+        job.status = 'cancelled';
+        job.stage = 'Cancelled';
+        mockEventBus.emitJobProgress({
+          operation_id: opId,
+          job_id: job.job_id,
+          input_path: job.input_path,
+          bytes_processed: 0,
+          total_bytes: job.total_bytes,
+          percentage: 0,
+          stage: 'Cancelled',
+          status: 'cancelled',
+        });
+        return {
+          job_id: job.job_id,
+          input_path: job.input_path,
+          status: 'cancelled',
+          original_size: job.total_bytes,
+          encrypted_size: 0,
+          duration_ms: Date.now() - jobStart,
+        };
+      }
+
+      const processed = Math.round((job.total_bytes * s) / steps);
+      const pct = Math.round((processed / job.total_bytes) * 90);
+      job.processed_bytes = processed;
+      job.progress_percentage = pct;
+
+      mockEventBus.emitJobProgress({
+        operation_id: opId,
+        job_id: job.job_id,
+        input_path: job.input_path,
+        bytes_processed: processed,
+        total_bytes: job.total_bytes,
+        percentage: pct,
+        stage: 'Encrypting',
+        status: 'encrypting',
+      });
+
+      await new Promise((r) => setTimeout(r, 80));
+    }
+
+    // Stage 3: Finalizing
+    job.status = 'finalizing';
+    job.stage = 'Finalizing';
+    mockEventBus.emitJobProgress({
+      operation_id: opId,
+      job_id: job.job_id,
+      input_path: job.input_path,
+      bytes_processed: job.total_bytes,
+      total_bytes: job.total_bytes,
+      percentage: 95,
+      stage: 'Finalizing',
+      status: 'finalizing',
+    });
+    await new Promise((r) => setTimeout(r, 40));
+
+    // Stage 4: Completed
+    const filename = job.input_path.split('/').pop() || 'file.enc';
+    const outputName = filename.endsWith('.enc') ? filename : `${filename}.enc`;
+    const outDir = request.output_directory || '~/Documents/Encrypted';
+    const outputPath = `${outDir}/${outputName}`;
+    const duration = Date.now() - jobStart;
+
+    job.status = 'completed';
+    job.stage = 'Completed';
+    job.processed_bytes = job.total_bytes;
+    job.progress_percentage = 100;
+    job.output_path = outputPath;
+    job.output_name = outputName;
+    job.duration_ms = duration;
+    job.completed_at = new Date().toISOString();
+
+    mockEventBus.emitJobProgress({
+      operation_id: opId,
+      job_id: job.job_id,
+      input_path: job.input_path,
+      bytes_processed: job.total_bytes,
+      total_bytes: job.total_bytes,
+      percentage: 100,
+      stage: 'Completed',
+      status: 'completed',
+      output_path: outputPath,
+    });
+
+    return {
+      job_id: job.job_id,
+      input_path: job.input_path,
+      output_path: outputPath,
+      output_name: outputName,
+      status: 'completed',
+      original_size: job.total_bytes,
+      encrypted_size: job.total_bytes + 256,
+      duration_ms: duration,
+    };
+  }
+
+  public async cancelJob(operationId: string, jobId: string): Promise<void> {
+    this.cancelledJobs.add(jobId);
+    const op = this.activeOperations.get(operationId);
+    if (op) {
+      const job = op.jobs.find((j) => j.job_id === jobId);
+      if (job && job.status === 'queued') {
+        job.status = 'cancelled';
+        job.stage = 'Cancelled';
+        mockEventBus.emitJobProgress({
+          operation_id: operationId,
+          job_id: jobId,
+          input_path: job.input_path,
+          bytes_processed: 0,
+          total_bytes: job.total_bytes,
+          percentage: 0,
+          stage: 'Cancelled',
+          status: 'cancelled',
+        });
+      }
+    }
+  }
+
+  public async cancelBatch(operationId: string): Promise<void> {
+    this.cancelledOperations.add(operationId);
+    const op = this.activeOperations.get(operationId);
+    if (op) {
+      for (const job of op.jobs) {
+        if (job.status === 'queued') {
+          job.status = 'cancelled';
+          job.stage = 'Cancelled';
+          mockEventBus.emitJobProgress({
+            operation_id: operationId,
+            job_id: job.job_id,
+            input_path: job.input_path,
+            bytes_processed: 0,
+            total_bytes: job.total_bytes,
+            percentage: 0,
+            stage: 'Cancelled',
+            status: 'cancelled',
+          });
+        }
+      }
+    }
+  }
+
+  public async getOperationStatus(operationId: string): Promise<BatchEncryptionOperation> {
+    const op = this.activeOperations.get(operationId);
+    if (!op) {
+      throw new Error(`Operation ${operationId} not found`);
+    }
+    return op;
+  }
 
   public pauseOperation(operationId: string): void {
     this.pausedOperations.add(operationId);
@@ -27,6 +452,7 @@ export class MockEncryptionService implements EncryptionService {
   public cancelOperation(operationId: string): void {
     this.cancelledOperations.add(operationId);
     this.pausedOperations.delete(operationId);
+    void this.cancelBatch(operationId);
   }
 
   public isPaused(operationId: string): boolean {

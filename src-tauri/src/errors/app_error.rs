@@ -84,6 +84,39 @@ pub enum AppError {
     #[error("Operation cancelled: {0}")]
     Cancelled(String),
 
+    #[error("Operation not found: {0}")]
+    OperationNotFound(String),
+
+    #[error("Job not found: {0}")]
+    JobNotFound(String),
+
+    #[error("Invalid operation state: {0}")]
+    InvalidOperationState(String),
+
+    #[error("Invalid job state: {0}")]
+    InvalidJobState(String),
+
+    #[error("Operation already running: {0}")]
+    OperationAlreadyRunning(String),
+
+    #[error("Operation was cancelled: {0}")]
+    OperationCancelled(String),
+
+    #[error("Job was cancelled: {0}")]
+    JobCancelled(String),
+
+    #[error("Queue error: {0}")]
+    QueueError(String),
+
+    #[error("Scheduler error: {0}")]
+    SchedulerError(String),
+
+    #[error("Progress emission failed: {0}")]
+    ProgressEmissionFailed(String),
+
+    #[error("Invalid concurrency limit: {0}")]
+    ConcurrencyLimitInvalid(String),
+
     #[error("System error: {0}")]
     SystemError(String),
 
@@ -135,6 +168,17 @@ impl Serialize for AppError {
             AppError::OutputWriteFailed(msg) => ("OUTPUT_WRITE_FAILED", msg.clone()),
             AppError::FinalizationFailed(msg) => ("FINALIZATION_FAILED", msg.clone()),
             AppError::Cancelled(msg) => ("CANCELLED", msg.clone()),
+            AppError::OperationNotFound(msg) => ("OPERATION_NOT_FOUND", msg.clone()),
+            AppError::JobNotFound(msg) => ("JOB_NOT_FOUND", msg.clone()),
+            AppError::InvalidOperationState(msg) => ("INVALID_OPERATION_STATE", msg.clone()),
+            AppError::InvalidJobState(msg) => ("INVALID_JOB_STATE", msg.clone()),
+            AppError::OperationAlreadyRunning(msg) => ("OPERATION_ALREADY_RUNNING", msg.clone()),
+            AppError::OperationCancelled(msg) => ("OPERATION_CANCELLED", msg.clone()),
+            AppError::JobCancelled(msg) => ("JOB_CANCELLED", msg.clone()),
+            AppError::QueueError(msg) => ("QUEUE_ERROR", msg.clone()),
+            AppError::SchedulerError(msg) => ("SCHEDULER_ERROR", msg.clone()),
+            AppError::ProgressEmissionFailed(msg) => ("PROGRESS_EMISSION_FAILED", msg.clone()),
+            AppError::ConcurrencyLimitInvalid(msg) => ("CONCURRENCY_LIMIT_INVALID", msg.clone()),
             AppError::SystemError(msg) => ("SYSTEM_ERROR", msg.clone()),
             AppError::InternalError(msg) => ("INTERNAL_ERROR", msg.clone()),
             AppError::Unavailable(msg) => ("SERVICE_UNAVAILABLE", msg.clone()),

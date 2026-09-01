@@ -1,5 +1,12 @@
 import { invoke } from '@tauri-apps/api/core';
-import { EncryptionOperation, ProcessingProgress, ProcessingResult } from '../../types';
+import {
+  BatchEncryptionOperation,
+  BatchOperationResult,
+  EncryptionOperation,
+  ProcessingProgress,
+  ProcessingResult,
+  StartBatchRequest,
+} from '../../types';
 import {
   EncryptionService,
   NativeEncryptionRequest,
@@ -10,6 +17,53 @@ import {
 export class TauriEncryptionService implements EncryptionService {
   private pausedOperations = new Set<string>();
   private cancelledOperations = new Set<string>();
+
+  public async startBatch(request: StartBatchRequest): Promise<BatchOperationResult> {
+    try {
+      return await invoke<BatchOperationResult>('start_encryption_batch', {
+        request: {
+          input_files: request.input_files,
+          output_directory: request.output_directory,
+          password: request.password,
+          concurrency: request.concurrency,
+          overwrite: request.overwrite ?? true,
+        },
+      });
+    } catch (err: unknown) {
+      throw new Error(this.formatErrorMessage(err));
+    }
+  }
+
+  public async cancelJob(operationId: string, jobId: string): Promise<void> {
+    try {
+      await invoke('cancel_encryption_job', {
+        operationId,
+        jobId,
+      });
+    } catch (err: unknown) {
+      console.warn(`Failed to cancel job ${jobId}:`, err);
+    }
+  }
+
+  public async cancelBatch(operationId: string): Promise<void> {
+    try {
+      await invoke('cancel_encryption_operation', {
+        operationId,
+      });
+    } catch (err: unknown) {
+      console.warn(`Failed to cancel operation ${operationId}:`, err);
+    }
+  }
+
+  public async getOperationStatus(operationId: string): Promise<BatchEncryptionOperation> {
+    try {
+      return await invoke<BatchEncryptionOperation>('get_encryption_operation_status', {
+        operationId,
+      });
+    } catch (err: unknown) {
+      throw new Error(this.formatErrorMessage(err));
+    }
+  }
 
   public pauseOperation(operationId: string): void {
     this.pausedOperations.add(operationId);
@@ -22,6 +76,7 @@ export class TauriEncryptionService implements EncryptionService {
   public cancelOperation(operationId: string): void {
     this.cancelledOperations.add(operationId);
     this.pausedOperations.delete(operationId);
+    void this.cancelBatch(operationId);
   }
 
   public isPaused(operationId: string): boolean {
@@ -110,12 +165,11 @@ export class TauriEncryptionService implements EncryptionService {
   }
 
   public async decryptFile(
-    operation: EncryptionOperation,
-    onProgress: ProgressCallback,
-    signal?: AbortSignal
+    _operation: EncryptionOperation,
+    _onProgress: ProgressCallback,
+    _signal?: AbortSignal
   ): Promise<ProcessingResult> {
-    // Decryption is scheduled for subsequent phases
-    throw new Error('Native file decryption will be enabled in Phase 5.');
+    throw new Error('Native file decryption will be enabled in Phase 6.');
   }
 
   private formatErrorMessage(err: unknown): string {

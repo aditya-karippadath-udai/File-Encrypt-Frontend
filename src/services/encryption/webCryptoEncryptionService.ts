@@ -1,6 +1,14 @@
-import { EncryptionOperation, ProcessingProgress, ProcessingResult } from '../../types';
+import {
+  BatchEncryptionOperation,
+  BatchOperationResult,
+  EncryptionOperation,
+  ProcessingProgress,
+  ProcessingResult,
+  StartBatchRequest,
+} from '../../types';
 import { EncryptionService, ProgressCallback } from './encryptionService';
 import { desktopService } from '../desktop/desktopService';
+import { mockEncryptionService } from './mockEncryptionService';
 
 const MAGIC_HEADER = new Uint8Array([0x41, 0x45, 0x47, 0x49, 0x53, 0x31]); // "AEGIS1"
 const SALT_LENGTH = 16;
@@ -10,6 +18,22 @@ const PBKDF2_ITERATIONS = 100000;
 export class WebCryptoEncryptionService implements EncryptionService {
   private pausedOperations = new Set<string>();
   private cancelledOperations = new Set<string>();
+
+  public async startBatch(request: StartBatchRequest): Promise<BatchOperationResult> {
+    return mockEncryptionService.startBatch(request);
+  }
+
+  public async cancelJob(operationId: string, jobId: string): Promise<void> {
+    return mockEncryptionService.cancelJob(operationId, jobId);
+  }
+
+  public async cancelBatch(operationId: string): Promise<void> {
+    return mockEncryptionService.cancelBatch(operationId);
+  }
+
+  public async getOperationStatus(operationId: string): Promise<BatchEncryptionOperation> {
+    return mockEncryptionService.getOperationStatus(operationId);
+  }
 
   public pauseOperation(operationId: string): void {
     this.pausedOperations.add(operationId);

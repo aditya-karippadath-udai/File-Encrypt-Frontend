@@ -2,11 +2,13 @@ pub mod commands;
 pub mod crypto;
 pub mod errors;
 pub mod models;
+pub mod operations;
 pub mod services;
 pub mod state;
 pub mod utils;
 
 use log::info;
+use operations::OperationManager;
 use services::{EncryptionService, FileService, SecurityService, SystemService};
 use state::AppState;
 
@@ -22,6 +24,7 @@ pub fn run() {
     let file_service = FileService::new();
     let security_service = SecurityService::new();
     let encryption_service = EncryptionService::new();
+    let operation_manager = OperationManager::new();
 
     tauri::Builder::default()
         .manage(app_state)
@@ -29,6 +32,7 @@ pub fn run() {
         .manage(file_service)
         .manage(security_service)
         .manage(encryption_service)
+        .manage(operation_manager)
         .invoke_handler(tauri::generate_handler![
             // System commands
             commands::get_app_info,
@@ -51,6 +55,10 @@ pub fn run() {
             commands::prepare_key_derivation,
             // Encryption commands
             commands::encrypt_file,
+            commands::start_encryption_batch,
+            commands::cancel_encryption_job,
+            commands::cancel_encryption_operation,
+            commands::get_encryption_operation_status,
         ])
         .run(tauri::generate_context!())
         .expect("Error while running Tauri application");

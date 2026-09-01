@@ -2,6 +2,26 @@ export type OperationType = 'encrypt' | 'decrypt';
 
 export type FileStatus = 'waiting' | 'processing' | 'paused' | 'completed' | 'failed' | 'cancelled';
 
+export type BatchOperationStatus =
+  | 'created'
+  | 'queued'
+  | 'running'
+  | 'cancelling'
+  | 'completed'
+  | 'completed_with_errors'
+  | 'cancelled'
+  | 'failed';
+
+export type BatchJobStatus =
+  | 'queued'
+  | 'preparing'
+  | 'encrypting'
+  | 'finalizing'
+  | 'completed'
+  | 'failed'
+  | 'cancelling'
+  | 'cancelled';
+
 export interface FileItem {
   id: string;
   name: string;
@@ -23,6 +43,99 @@ export interface ProcessingProgress {
   speedBytesPerSec: number;
   timeRemainingSec: number;
   stageText: string;
+}
+
+export interface BatchEncryptionJob {
+  job_id: string;
+  operation_id: string;
+  input_path: string;
+  output_path?: string;
+  output_name?: string;
+  status: BatchJobStatus;
+  total_bytes: number;
+  processed_bytes: number;
+  progress_percentage: number;
+  stage: string;
+  error?: string;
+  duration_ms?: number;
+  created_at: string;
+  completed_at?: string;
+}
+
+export interface BatchEncryptionOperation {
+  operation_id: string;
+  status: BatchOperationStatus;
+  total_files: number;
+  completed_files: number;
+  failed_files: number;
+  cancelled_files: number;
+  total_bytes: number;
+  processed_bytes: number;
+  created_at: string;
+  started_at?: string;
+  completed_at?: string;
+  jobs: BatchEncryptionJob[];
+}
+
+export interface BatchProgressPayload {
+  operation_id: string;
+  total_files: number;
+  completed_files: number;
+  failed_files: number;
+  cancelled_files: number;
+  total_bytes: number;
+  processed_bytes: number;
+  percentage: number;
+  status: BatchOperationStatus;
+}
+
+export interface JobProgressPayload {
+  operation_id: string;
+  job_id: string;
+  input_path: string;
+  bytes_processed: number;
+  total_bytes: number;
+  percentage: number;
+  stage: string;
+  status: BatchJobStatus;
+  output_path?: string;
+  error?: string;
+}
+
+export interface JobResultItem {
+  job_id: string;
+  input_path: string;
+  output_path?: string;
+  output_name?: string;
+  status: BatchJobStatus;
+  original_size: number;
+  encrypted_size: number;
+  duration_ms: number;
+  error?: string;
+}
+
+export interface BatchOperationResult {
+  operation_id: string;
+  status: BatchOperationStatus;
+  total_files: number;
+  successful_files: number;
+  failed_files: number;
+  cancelled_files: number;
+  total_bytes: number;
+  processed_bytes: number;
+  duration_ms: number;
+  started_at: string;
+  completed_at: string;
+  jobs: JobResultItem[];
+}
+
+export interface StartBatchRequest {
+  input_files: string[];
+  output_directory?: string;
+  password: string;
+  concurrency?: number;
+  overwrite?: boolean;
+  rawFiles?: File[];
 }
 
 export interface EncryptionOperation {
