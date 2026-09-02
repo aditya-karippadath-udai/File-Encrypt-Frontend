@@ -2,25 +2,36 @@ import { invoke } from '@tauri-apps/api/core';
 import {
   BatchEncryptionOperation,
   BatchOperationResult,
+  EncryptedFileDetectionResult,
   EncryptionOperation,
-  ProcessingProgress,
   ProcessingResult,
   StartBatchRequest,
 } from '../../types';
 import {
-  EncryptionService,
-  NativeEncryptionRequest,
-  NativeEncryptionResult,
+  DecryptionService,
+  NativeDecryptionRequest,
+  NativeDecryptionResult,
   ProgressCallback,
-} from './encryptionService';
+} from './decryptionService';
 
-export class TauriEncryptionService implements EncryptionService {
+export class TauriDecryptionService implements DecryptionService {
   private pausedOperations = new Set<string>();
   private cancelledOperations = new Set<string>();
 
+  public async detectEncryptedFile(path: string): Promise<EncryptedFileDetectionResult> {
+    try {
+      return await invoke<EncryptedFileDetectionResult>('detect_encrypted_file', { path });
+    } catch (err: unknown) {
+      return {
+        is_encrypted: false,
+        error: this.formatErrorMessage(err),
+      };
+    }
+  }
+
   public async startBatch(request: StartBatchRequest): Promise<BatchOperationResult> {
     try {
-      return await invoke<BatchOperationResult>('start_encryption_batch', {
+      return await invoke<BatchOperationResult>('start_decryption_batch', {
         request: {
           input_files: request.input_files,
           output_directory: request.output_directory,
@@ -36,28 +47,28 @@ export class TauriEncryptionService implements EncryptionService {
 
   public async cancelJob(operationId: string, jobId: string): Promise<void> {
     try {
-      await invoke('cancel_encryption_job', {
+      await invoke('cancel_decryption_job', {
         operationId,
         jobId,
       });
     } catch (err: unknown) {
-      console.warn(`Failed to cancel job ${jobId}:`, err);
+      console.warn(`Failed to cancel decryption job ${jobId}:`, err);
     }
   }
 
   public async cancelBatch(operationId: string): Promise<void> {
     try {
-      await invoke('cancel_encryption_operation', {
+      await invoke('cancel_decryption_operation', {
         operationId,
       });
     } catch (err: unknown) {
-      console.warn(`Failed to cancel operation ${operationId}:`, err);
+      console.warn(`Failed to cancel decryption operation ${operationId}:`, err);
     }
   }
 
   public async getOperationStatus(operationId: string): Promise<BatchEncryptionOperation> {
     try {
-      return await invoke<BatchEncryptionOperation>('get_encryption_operation_status', {
+      return await invoke<BatchEncryptionOperation>('get_decryption_operation_status', {
         operationId,
       });
     } catch (err: unknown) {
@@ -83,87 +94,6 @@ export class TauriEncryptionService implements EncryptionService {
     return this.pausedOperations.has(operationId);
   }
 
-  public async encryptFile(
-    operation: EncryptionOperation,
-    onProgress: ProgressCallback,
-    signal?: AbortSignal
-  ): Promise<ProcessingResult> {
-    const startTime = Date.now();
-    this.cancelledOperations.delete(operation.id);
-    this.pausedOperations.delete(operation.id);
-
-    if (!operation.password) {
-      throw new Error('Password is required for encryption.');
-    }
-
-    if (!operation.file.path) {
-      throw new Error('Native file path is required for desktop file encryption.');
-    }
-
-    if (this.cancelledOperations.has(operation.id) || signal?.aborted) {
-      throw new Error('Operation was cancelled by user');
-    }
-
-    // Stage 1: Key Derivation & Preparation
-    onProgress({
-      percent: 15,
-      bytesProcessed: 0,
-      totalBytes: operation.file.size,
-      speedBytesPerSec: 0,
-      timeRemainingSec: 1,
-      stageText: 'Deriving 256-bit key with Argon2id (64MB memory, 3 iterations)...',
-    });
-
-    await this.checkPauseOrCancel(operation.id, signal);
-
-    // Stage 2: Streaming Encryption in Native Rust Backend
-    onProgress({
-      percent: 45,
-      bytesProcessed: Math.round(operation.file.size * 0.3),
-      totalBytes: operation.file.size,
-      speedBytesPerSec: 120 * 1024 * 1024,
-      timeRemainingSec: 1,
-      stageText: 'Streaming XChaCha20-Poly1305 authenticated encryption (64KB chunks)...',
-    });
-
-    const request: NativeEncryptionRequest = {
-      input_path: operation.file.path,
-      output_path: operation.outputPath,
-      output_dir: undefined,
-      password: operation.password,
-      overwrite: true,
-    };
-
-    let result: NativeEncryptionResult;
-    try {
-      result = await invoke<NativeEncryptionResult>('encrypt_file', { request });
-    } catch (err: unknown) {
-      const errorMsg = this.formatErrorMessage(err);
-      throw new Error(errorMsg);
-    }
-
-    await this.checkPauseOrCancel(operation.id, signal);
-
-    // Stage 3: Completed
-    onProgress({
-      percent: 100,
-      bytesProcessed: operation.file.size,
-      totalBytes: operation.file.size,
-      speedBytesPerSec: 150 * 1024 * 1024,
-      timeRemainingSec: 0,
-      stageText: 'Encrypted file finalized and atomically written.',
-    });
-
-    return {
-      operationId: operation.id,
-      success: true,
-      outputPath: result.output_path,
-      outputName: result.output_name,
-      checksum: `AEGIS-${result.algorithm.toUpperCase()}`,
-      durationMs: Date.now() - startTime,
-    };
-  }
-
   public async decryptFile(
     operation: EncryptionOperation,
     onProgress: ProgressCallback,
@@ -185,19 +115,19 @@ export class TauriEncryptionService implements EncryptionService {
       throw new Error('Operation was cancelled by user');
     }
 
-    // Stage 1: Parsing Header and Key Derivation
+    // Stage 1: Container inspection and key derivation
     onProgress({
       percent: 15,
       bytesProcessed: 0,
       totalBytes: operation.file.size,
       speedBytesPerSec: 0,
       timeRemainingSec: 1,
-      stageText: 'Parsing container header and deriving key with Argon2id...',
+      stageText: 'Verifying container header and deriving key with Argon2id...',
     });
 
     await this.checkPauseOrCancel(operation.id, signal);
 
-    // Stage 2: Streaming Decryption & Authentication
+    // Stage 2: Streaming authenticated decryption
     onProgress({
       percent: 50,
       bytesProcessed: Math.round(operation.file.size * 0.4),
@@ -207,7 +137,7 @@ export class TauriEncryptionService implements EncryptionService {
       stageText: 'Streaming XChaCha20-Poly1305 authenticated decryption...',
     });
 
-    const request = {
+    const request: NativeDecryptionRequest = {
       input_path: operation.file.path,
       output_path: operation.outputPath,
       output_dir: undefined,
@@ -215,20 +145,9 @@ export class TauriEncryptionService implements EncryptionService {
       overwrite: true,
     };
 
-    let result: {
-      input_path: string;
-      output_path: string;
-      output_name: string;
-      original_file_name: string;
-      original_size_bytes: number;
-      decrypted_size_bytes: number;
-      duration_ms: number;
-      algorithm: string;
-      format_version: number;
-    };
-
+    let result: NativeDecryptionResult;
     try {
-      result = await invoke('decrypt_file', { request });
+      result = await invoke<NativeDecryptionResult>('decrypt_file', { request });
     } catch (err: unknown) {
       const errorMsg = this.formatErrorMessage(err);
       throw new Error(errorMsg);
@@ -243,7 +162,7 @@ export class TauriEncryptionService implements EncryptionService {
       totalBytes: operation.file.size,
       speedBytesPerSec: 160 * 1024 * 1024,
       timeRemainingSec: 0,
-      stageText: 'Decrypted file verified and written successfully.',
+      stageText: 'File decrypted and verified successfully.',
     });
 
     return {
@@ -266,7 +185,7 @@ export class TauriEncryptionService implements EncryptionService {
         return (err as { error: string }).error;
       }
     }
-    return 'An unexpected error occurred during native encryption.';
+    return 'An unexpected error occurred during native decryption.';
   }
 
   private async checkPauseOrCancel(operationId: string, signal?: AbortSignal): Promise<void> {
@@ -283,4 +202,4 @@ export class TauriEncryptionService implements EncryptionService {
   }
 }
 
-export const tauriEncryptionService = new TauriEncryptionService();
+export const tauriDecryptionService = new TauriDecryptionService();

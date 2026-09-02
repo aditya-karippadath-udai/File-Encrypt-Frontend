@@ -3,21 +3,27 @@ use std::sync::Arc;
 use log::{info, warn};
 
 use crate::errors::AppError;
+use crate::models::decryption::{DecryptionOperationResult, StartDecryptionBatchRequest};
 use crate::models::{
     EncryptionJob, EncryptionOperation, EncryptionOperationResult, OperationStatus,
     StartEncryptionBatchRequest,
 };
 use crate::operations::cancellation::CancellationRegistry;
+use crate::operations::decryption_scheduler::{
+    DecryptionEventEmitter, DecryptionScheduler, NoopDecryptionEventEmitter,
+    TauriDecryptionEventEmitter,
+};
 use crate::operations::registry::OperationRegistry;
 use crate::operations::scheduler::{JobScheduler, NoopEventEmitter, ProgressEventEmitter, TauriEventEmitter};
 use crate::services::file_service::FileService;
 use crate::services::security_service::SecurityService;
 
-/// High-level manager coordinating batch encryption workflows.
+/// High-level manager coordinating batch encryption and decryption workflows.
 pub struct OperationManager {
     registry: Arc<OperationRegistry>,
     cancellation: Arc<CancellationRegistry>,
     scheduler: Arc<JobScheduler>,
+    decryption_scheduler: Arc<DecryptionScheduler>,
     file_service: Arc<FileService>,
     security_service: Arc<SecurityService>,
 }
@@ -32,18 +38,24 @@ impl OperationManager {
             Arc::clone(&cancellation),
             Arc::clone(&file_service),
         ));
+        let decryption_scheduler = Arc::new(DecryptionScheduler::new(
+            Arc::clone(&registry),
+            Arc::clone(&cancellation),
+            Arc::clone(&file_service),
+        ));
         let security_service = Arc::new(SecurityService::new());
 
         Self {
             registry,
             cancellation,
             scheduler,
+            decryption_scheduler,
             file_service,
             security_service,
         }
     }
 
-    /// Validates batch request, creates jobs, and executes the batch operation.
+    /// Validates batch request, creates jobs, and executes the batch encryption operation.
     /// Emits progress events via Tauri if an AppHandle is provided.
     pub fn start_batch(
         &self,
@@ -116,6 +128,74 @@ impl OperationManager {
 
         // 6. Execute operation via scheduler
         self.scheduler.execute_operation(
+            operation,
+            &request.password,
+            request.output_directory,
+            request.overwrite,
+            concurrency,
+            emitter,
+        )
+    }
+
+    /// Validates batch decryption request, creates jobs, and executes the batch decryption operation.
+    pub fn start_decryption_batch(
+        &self,
+        app_handle: Option<&tauri::AppHandle>,
+        request: StartDecryptionBatchRequest,
+    ) -> Result<DecryptionOperationResult, AppError> {
+        info!("Validating batch decryption request with {} input files", request.input_files.len());
+
+        // 1. Validate Password
+        if request.password.is_empty() {
+            return Err(AppError::PasswordRequired(
+                "Password cannot be empty for batch decryption".to_string(),
+            ));
+        }
+
+        // 2. Validate Input Files
+        if request.input_files.is_empty() {
+            return Err(AppError::ValidationError(
+                "At least one input file must be selected for batch decryption".to_string(),
+            ));
+        }
+
+        // Duplicate check
+        let mut seen_paths = HashSet::new();
+        for path in &request.input_files {
+            if !seen_paths.insert(path) {
+                return Err(AppError::DuplicateFile(format!(
+                    "Duplicate file in decryption batch: {}",
+                    path
+                )));
+            }
+        }
+
+        // Validate each file exists and get sizes
+        let mut jobs = Vec::with_capacity(request.input_files.len());
+        for path in &request.input_files {
+            let metadata = self.file_service.get_file_metadata(path)?;
+            let job = EncryptionJob::new("".to_string(), path.clone(), metadata.size_bytes);
+            jobs.push(job);
+        }
+
+        // 3. Create Operation Model
+        let mut operation = EncryptionOperation::new(jobs);
+        let op_id = operation.operation_id.clone();
+
+        for job in &mut operation.jobs {
+            job.operation_id = op_id.clone();
+        }
+
+        // 4. Determine event emitter
+        let emitter: Arc<dyn DecryptionEventEmitter> = match app_handle {
+            Some(handle) => Arc::new(TauriDecryptionEventEmitter::new(handle.clone())),
+            None => Arc::new(NoopDecryptionEventEmitter),
+        };
+
+        let concurrency = request.concurrency.unwrap_or(2).clamp(1, 8);
+
+        // 5. Execute decryption batch via decryption scheduler
+        self.decryption_scheduler.execute_operation(
             operation,
             &request.password,
             request.output_directory,

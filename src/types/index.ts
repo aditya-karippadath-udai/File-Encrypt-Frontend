@@ -166,6 +166,17 @@ export interface ProcessingResult {
   durationMs: number;
 }
 
+export interface EncryptedFileDetectionResult {
+  is_encrypted: boolean;
+  format_version?: number;
+  algorithm?: string;
+  key_derivation?: string;
+  chunk_size_bytes?: number;
+  salt_hex?: string;
+  nonce_hex?: string;
+  error?: string;
+}
+
 export type ThemeMode = 'dark' | 'light' | 'system';
 export type OutputBehavior = 'same-folder' | 'custom-folder' | 'ask';
 

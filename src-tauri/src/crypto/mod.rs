@@ -1,9 +1,14 @@
+pub mod decryption;
 pub mod encryption;
 pub mod format;
 pub mod key_derivation;
 pub mod nonce;
 pub mod random;
 
+pub use decryption::{
+    decrypt_chunk, decrypt_file_stream, detect_encrypted_file, recover_authenticated_metadata,
+    DecryptionProgressCallback, EncryptedFileDetectionResult,
+};
 pub use encryption::{
     build_chunk_aad, encrypt_chunk, encrypt_file_stream, CancellationCheck,
     EncryptionProgressCallback, POLY1305_TAG_LENGTH,

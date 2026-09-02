@@ -63,6 +63,54 @@ pub enum AppError {
     #[error("Invalid encryption request: {0}")]
     InvalidEncryptionRequest(String),
 
+    #[error("Decryption failed: {0}")]
+    DecryptionFailed(String),
+
+    #[error("Invalid decryption request: {0}")]
+    InvalidDecryptionRequest(String),
+
+    #[error("Invalid encrypted file: {0}")]
+    InvalidEncryptedFile(String),
+
+    #[error("Invalid file header: {0}")]
+    InvalidFileHeader(String),
+
+    #[error("Unsupported file version: {0}")]
+    UnsupportedFileVersion(String),
+
+    #[error("Unsupported encryption algorithm: {0}")]
+    UnsupportedEncryptionAlgorithm(String),
+
+    #[error("Unsupported KDF: {0}")]
+    UnsupportedKdf(String),
+
+    #[error("Invalid KDF configuration: {0}")]
+    InvalidKdfConfiguration(String),
+
+    #[error("Malformed encrypted file: {0}")]
+    MalformedEncryptedFile(String),
+
+    #[error("Truncated encrypted file: {0}")]
+    TruncatedEncryptedFile(String),
+
+    #[error("Authentication failed: {0}")]
+    AuthenticationFailed(String),
+
+    #[error("Invalid password or corrupted file: {0}")]
+    InvalidPasswordOrCorruptedFile(String),
+
+    #[error("Metadata decryption failed: {0}")]
+    MetadataDecryptionFailed(String),
+
+    #[error("Invalid metadata: {0}")]
+    InvalidMetadata(String),
+
+    #[error("Decrypted size mismatch: {0}")]
+    DecryptedSizeMismatch(String),
+
+    #[error("Decryption cancelled: {0}")]
+    DecryptionCancelled(String),
+
     #[error("Header creation failed: {0}")]
     HeaderCreationFailed(String),
 
@@ -161,6 +209,22 @@ impl Serialize for AppError {
             AppError::InvalidCryptoConfiguration(msg) => ("INVALID_CRYPTO_CONFIGURATION", msg.clone()),
             AppError::EncryptionFailed(msg) => ("ENCRYPTION_FAILED", msg.clone()),
             AppError::InvalidEncryptionRequest(msg) => ("INVALID_ENCRYPTION_REQUEST", msg.clone()),
+            AppError::DecryptionFailed(msg) => ("DECRYPTION_FAILED", msg.clone()),
+            AppError::InvalidDecryptionRequest(msg) => ("INVALID_DECRYPTION_REQUEST", msg.clone()),
+            AppError::InvalidEncryptedFile(msg) => ("INVALID_ENCRYPTED_FILE", msg.clone()),
+            AppError::InvalidFileHeader(msg) => ("INVALID_FILE_HEADER", msg.clone()),
+            AppError::UnsupportedFileVersion(msg) => ("UNSUPPORTED_FILE_VERSION", msg.clone()),
+            AppError::UnsupportedEncryptionAlgorithm(msg) => ("UNSUPPORTED_ENCRYPTION_ALGORITHM", msg.clone()),
+            AppError::UnsupportedKdf(msg) => ("UNSUPPORTED_KDF", msg.clone()),
+            AppError::InvalidKdfConfiguration(msg) => ("INVALID_KDF_CONFIGURATION", msg.clone()),
+            AppError::MalformedEncryptedFile(msg) => ("MALFORMED_ENCRYPTED_FILE", msg.clone()),
+            AppError::TruncatedEncryptedFile(msg) => ("TRUNCATED_ENCRYPTED_FILE", msg.clone()),
+            AppError::AuthenticationFailed(msg) => ("AUTHENTICATION_FAILED", msg.clone()),
+            AppError::InvalidPasswordOrCorruptedFile(msg) => ("INVALID_PASSWORD_OR_CORRUPTED_FILE", msg.clone()),
+            AppError::MetadataDecryptionFailed(msg) => ("METADATA_DECRYPTION_FAILED", msg.clone()),
+            AppError::InvalidMetadata(msg) => ("INVALID_METADATA", msg.clone()),
+            AppError::DecryptedSizeMismatch(msg) => ("DECRYPTED_SIZE_MISMATCH", msg.clone()),
+            AppError::DecryptionCancelled(msg) => ("DECRYPTION_CANCELLED", msg.clone()),
             AppError::HeaderCreationFailed(msg) => ("HEADER_CREATION_FAILED", msg.clone()),
             AppError::HeaderWriteFailed(msg) => ("HEADER_WRITE_FAILED", msg.clone()),
             AppError::InvalidChunkConfiguration(msg) => ("INVALID_CHUNK_CONFIGURATION", msg.clone()),

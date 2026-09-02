@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { EncryptionOperation, FileItem, OperationType, ProcessingProgress } from '../types';
 import { encryptionService } from '../services/encryption';
+import { decryptionService } from '../services/decryption';
 import { useHistoryStore } from './useHistoryStore';
 import { useSettingsStore } from './useSettingsStore';
 import { useToastStore } from './useToastStore';
@@ -92,7 +93,12 @@ export const useQueueStore = create<QueueState>((set, get) => ({
     if (abortControllers[id]) {
       abortControllers[id].abort();
     }
-    encryptionService.cancelOperation(id);
+    const op = operations.find((o) => o.id === id);
+    if (op?.type === 'decrypt') {
+      decryptionService.cancelOperation(id);
+    } else {
+      encryptionService.cancelOperation(id);
+    }
 
     set({
       operations: operations.filter((op) => op.id !== id),
@@ -119,14 +125,24 @@ export const useQueueStore = create<QueueState>((set, get) => ({
   },
 
   pauseOperation: (id) => {
-    encryptionService.pauseOperation(id);
+    const op = get().operations.find((o) => o.id === id);
+    if (op?.type === 'decrypt') {
+      decryptionService.pauseOperation(id);
+    } else {
+      encryptionService.pauseOperation(id);
+    }
     set((state) => ({
       operations: state.operations.map((op) => (op.id === id ? { ...op, status: 'paused' } : op)),
     }));
   },
 
   resumeOperation: (id) => {
-    encryptionService.resumeOperation(id);
+    const op = get().operations.find((o) => o.id === id);
+    if (op?.type === 'decrypt') {
+      decryptionService.resumeOperation(id);
+    } else {
+      encryptionService.resumeOperation(id);
+    }
     set((state) => ({
       operations: state.operations.map((op) => (op.id === id ? { ...op, status: 'processing' } : op)),
     }));
@@ -134,11 +150,16 @@ export const useQueueStore = create<QueueState>((set, get) => ({
   },
 
   cancelOperation: (id) => {
-    const { abortControllers } = get();
+    const { abortControllers, operations } = get();
     if (abortControllers[id]) {
       abortControllers[id].abort();
     }
-    encryptionService.cancelOperation(id);
+    const op = operations.find((o) => o.id === id);
+    if (op?.type === 'decrypt') {
+      decryptionService.cancelOperation(id);
+    } else {
+      encryptionService.cancelOperation(id);
+    }
 
     set((state) => ({
       operations: state.operations.map((op) =>
@@ -251,7 +272,7 @@ export const useQueueStore = create<QueueState>((set, get) => ({
         const handler =
           operation.type === 'encrypt'
             ? encryptionService.encryptFile.bind(encryptionService)
-            : encryptionService.decryptFile.bind(encryptionService);
+            : decryptionService.decryptFile.bind(decryptionService);
 
         const result = await handler(
           operation,
