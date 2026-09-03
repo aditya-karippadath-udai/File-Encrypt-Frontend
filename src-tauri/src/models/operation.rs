@@ -86,15 +86,17 @@ impl OperationStatus {
     }
 }
 
-/// Lifecycle state for an individual file encryption job within a batch.
+/// Lifecycle state for an individual file encryption/decryption job within a batch.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum JobStatus {
     Queued,
     Preparing,
     Encrypting,
+    Decrypting,
     Finalizing,
     Completed,
+    Skipped,
     Failed,
     Cancelling,
     Cancelled,
@@ -105,7 +107,7 @@ impl JobStatus {
     pub fn is_terminal(&self) -> bool {
         matches!(
             self,
-            JobStatus::Completed | JobStatus::Failed | JobStatus::Cancelled
+            JobStatus::Completed | JobStatus::Skipped | JobStatus::Failed | JobStatus::Cancelled
         )
     }
 
@@ -124,6 +126,7 @@ impl JobStatus {
             JobStatus::Queued => matches!(
                 target,
                 JobStatus::Preparing
+                    | JobStatus::Skipped
                     | JobStatus::Cancelling
                     | JobStatus::Cancelled
                     | JobStatus::Failed
@@ -131,11 +134,13 @@ impl JobStatus {
             JobStatus::Preparing => matches!(
                 target,
                 JobStatus::Encrypting
+                    | JobStatus::Decrypting
+                    | JobStatus::Skipped
                     | JobStatus::Cancelling
                     | JobStatus::Cancelled
                     | JobStatus::Failed
             ),
-            JobStatus::Encrypting => matches!(
+            JobStatus::Encrypting | JobStatus::Decrypting => matches!(
                 target,
                 JobStatus::Finalizing
                     | JobStatus::Cancelling
@@ -253,6 +258,7 @@ pub struct EncryptionOperation {
     pub completed_files: usize,
     pub failed_files: usize,
     pub cancelled_files: usize,
+    pub skipped_files: usize,
     pub total_bytes: u64,
     pub processed_bytes: u64,
     pub created_at: String,
@@ -276,6 +282,7 @@ impl EncryptionOperation {
             completed_files: 0,
             failed_files: 0,
             cancelled_files: 0,
+            skipped_files: 0,
             total_bytes,
             processed_bytes: 0,
             created_at: Utc::now().to_rfc3339(),
@@ -290,6 +297,7 @@ impl EncryptionOperation {
         let mut completed = 0;
         let mut failed = 0;
         let mut cancelled = 0;
+        let mut skipped = 0;
         let mut processed = 0;
 
         for job in &self.jobs {
@@ -298,6 +306,7 @@ impl EncryptionOperation {
                 JobStatus::Completed => completed += 1,
                 JobStatus::Failed => failed += 1,
                 JobStatus::Cancelled => cancelled += 1,
+                JobStatus::Skipped => skipped += 1,
                 _ => {}
             }
         }
@@ -305,6 +314,7 @@ impl EncryptionOperation {
         self.completed_files = completed;
         self.failed_files = failed;
         self.cancelled_files = cancelled;
+        self.skipped_files = skipped;
         self.processed_bytes = processed;
 
         let all_terminal = self.jobs.iter().all(|j| j.status.is_terminal());
@@ -329,11 +339,19 @@ impl EncryptionOperation {
         if self.total_bytes > 0 {
             ((self.processed_bytes as f64 / self.total_bytes as f64) * 100.0).clamp(0.0, 100.0)
         } else if self.total_files > 0 {
-            ((self.completed_files as f64 / self.total_files as f64) * 100.0).clamp(0.0, 100.0)
+            (((self.completed_files + self.skipped_files) as f64 / self.total_files as f64) * 100.0).clamp(0.0, 100.0)
         } else {
             100.0
         }
     }
+}
+
+/// Type of operation performed
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum OperationType {
+    Encrypt,
+    Decrypt,
 }
 
 /// Serializable progress event for the entire batch operation.
@@ -344,6 +362,7 @@ pub struct BatchProgressEvent {
     pub completed_files: usize,
     pub failed_files: usize,
     pub cancelled_files: usize,
+    pub skipped_files: usize,
     pub total_bytes: u64,
     pub processed_bytes: u64,
     pub percentage: f64,
@@ -393,12 +412,54 @@ pub struct EncryptionOperationResult {
     pub successful_files: usize,
     pub failed_files: usize,
     pub cancelled_files: usize,
+    pub skipped_files: usize,
     pub total_bytes: u64,
     pub processed_bytes: u64,
     pub duration_ms: u64,
     pub started_at: String,
     pub completed_at: String,
     pub jobs: Vec<JobResult>,
+}
+
+/// In-memory non-persistent Job Summary for Current Session view
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct JobSummary {
+    pub job_id: String,
+    pub input_path: String,
+    pub input_filename: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub output_path: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub output_filename: Option<String>,
+    pub status: JobStatus,
+    pub duration_ms: u64,
+    pub bytes_processed: u64,
+    pub total_bytes: u64,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub safe_error: Option<String>,
+    pub is_skipped: bool,
+}
+
+/// In-memory non-persistent Operation Summary for Current Session tracking
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct OperationSummary {
+    pub operation_id: String,
+    pub operation_type: OperationType,
+    pub status: OperationStatus,
+    pub started_at: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub completed_at: Option<String>,
+    pub duration_ms: u64,
+    pub total_files: usize,
+    pub completed_files: usize,
+    pub failed_files: usize,
+    pub cancelled_files: usize,
+    pub skipped_files: usize,
+    pub total_bytes: u64,
+    pub processed_bytes: u64,
+    pub jobs: Vec<JobSummary>,
 }
 
 #[cfg(test)]

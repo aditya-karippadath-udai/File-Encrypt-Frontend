@@ -1,4 +1,4 @@
-import { FileItem } from '../../types';
+import { BatchConflictPlan, FileItem, OutputConflictStrategy } from '../../types';
 
 export interface FileMetadata {
   path: string;
@@ -63,6 +63,11 @@ export interface FileService {
   selectFiles(options?: FileDialogOptions): Promise<FileItem[]>;
 
   /**
+   * Safely resolves dropped file/folder paths recursively.
+   */
+  resolveDroppedPaths(paths: string[]): Promise<FileValidationResult[]>;
+
+  /**
    * Opens native directory picker (or browser folder picker) to select output directory.
    */
   selectOutputDirectory(): Promise<string | null>;
@@ -111,6 +116,17 @@ export interface FileService {
    * Detects potential output collisions or overwrite safety issues.
    */
   checkOutputConflict(inputPath: string, outputPath: string): Promise<OutputConflictResult>;
+
+  /**
+   * Computes comprehensive batch conflict plan across all files.
+   */
+  planBatchOutputs(
+    inputPaths: string[],
+    outputDir?: string,
+    mode?: 'encrypt' | 'decrypt',
+    customSuffix?: string,
+    globalStrategy?: OutputConflictStrategy
+  ): Promise<BatchConflictPlan>;
 
   /**
    * Prepares a safe temporary output location.

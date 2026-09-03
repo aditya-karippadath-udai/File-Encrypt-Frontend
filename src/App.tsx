@@ -12,6 +12,7 @@ import { EncryptPage } from './pages/EncryptPage';
 import { DecryptPage } from './pages/DecryptPage';
 import { QueuePage } from './pages/QueuePage';
 import { HistoryPage } from './pages/HistoryPage';
+import { SessionPage } from './pages/SessionPage';
 import { SettingsPage } from './pages/SettingsPage';
 
 export default function App() {
@@ -29,6 +30,8 @@ export default function App() {
         return <QueuePage />;
       case 'history':
         return <HistoryPage />;
+      case 'session':
+        return <SessionPage />;
       case 'settings':
         return <SettingsPage />;
       default:

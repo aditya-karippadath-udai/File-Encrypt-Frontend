@@ -1,4 +1,11 @@
-import { FileItem } from '../../types';
+import {
+  BatchConflictPlan,
+  ConflictAction,
+  ConflictType,
+  FileItem,
+  OutputConflictStrategy,
+  PlannedOutputItem,
+} from '../../types';
 import {
   BatchSummary,
   FileDialogOptions,
@@ -98,6 +105,10 @@ export class MockFileService implements FileService {
 
       input.click();
     });
+  }
+
+  async resolveDroppedPaths(paths: string[]): Promise<FileValidationResult[]> {
+    return this.validateFiles(paths);
   }
 
   async selectOutputDirectory(): Promise<string | null> {
@@ -274,6 +285,117 @@ export class MockFileService implements FileService {
       outputPath,
       message: 'Output path is valid with no conflicts.',
       canOverwrite: true,
+    };
+  }
+
+  async planBatchOutputs(
+    inputPaths: string[],
+    outputDir?: string,
+    mode: 'encrypt' | 'decrypt' = 'encrypt',
+    customSuffix?: string,
+    globalStrategy: OutputConflictStrategy = 'ask'
+  ): Promise<BatchConflictPlan> {
+    const items: PlannedOutputItem[] = [];
+    const usedPaths = new Set<string>();
+
+    let conflictingFiles = 0;
+    let safeFiles = 0;
+    let sameAsInputFiles = 0;
+
+    for (let i = 0; i < inputPaths.length; i++) {
+      const inPath = inputPaths[i];
+      const parts = inPath.split(/[/\\]/);
+      const filename = parts[parts.length - 1] || `file_${i}`;
+
+      const proposedOutPath = await this.generateOutputPath(
+        inPath,
+        outputDir,
+        mode,
+        customSuffix
+      );
+      const proposedParts = proposedOutPath.split(/[/\\]/);
+      const proposedOutName = proposedParts[proposedParts.length - 1];
+
+      let conflictType: ConflictType = 'none';
+      let canOverwrite = true;
+      let conflictMessage: string | undefined;
+
+      if (inPath.toLowerCase() === proposedOutPath.toLowerCase()) {
+        conflictType = 'same_as_input';
+        canOverwrite = false;
+        conflictMessage = 'Output destination is identical to input file';
+        sameAsInputFiles++;
+      } else if (usedPaths.has(proposedOutPath.toLowerCase())) {
+        conflictType = 'internal_collision';
+        canOverwrite = false;
+        conflictMessage = 'Another file in this batch has the same output destination';
+        conflictingFiles++;
+      } else if (this.knownFiles.has(proposedOutPath)) {
+        conflictType = 'file_exists';
+        canOverwrite = true;
+        conflictMessage = 'Target output file already exists';
+        conflictingFiles++;
+      } else {
+        safeFiles++;
+      }
+
+      usedPaths.add(proposedOutPath.toLowerCase());
+
+      let chosenAction: ConflictAction = 'overwrite';
+      let resolvedPath = proposedOutPath;
+      let resolvedName = proposedOutName;
+
+      if (conflictType !== 'none') {
+        switch (globalStrategy) {
+          case 'skip':
+            chosenAction = 'skip';
+            break;
+          case 'rename': {
+            chosenAction = 'rename';
+            const dotIdx = proposedOutName.lastIndexOf('.');
+            const stem = dotIdx !== -1 ? proposedOutName.substring(0, dotIdx) : proposedOutName;
+            const ext = dotIdx !== -1 ? proposedOutName.substring(dotIdx) : '';
+            resolvedName = `${stem} (1)${ext}`;
+            const parent = proposedParts.slice(0, -1).join('/') || '.';
+            resolvedPath = `${parent}/${resolvedName}`;
+            break;
+          }
+          case 'overwrite':
+            chosenAction = canOverwrite ? 'overwrite' : 'rename';
+            break;
+          case 'ask':
+          default:
+            chosenAction = canOverwrite ? 'overwrite' : 'rename';
+            break;
+        }
+      }
+
+      items.push({
+        job_id: `job-${i + 1}`,
+        input_path: inPath,
+        input_filename: filename,
+        proposed_output_path: proposedOutPath,
+        proposed_output_name: proposedOutName,
+        conflict_type: conflictType,
+        can_overwrite: canOverwrite,
+        chosen_action: chosenAction,
+        resolved_output_path: resolvedPath,
+        resolved_output_name: resolvedName,
+        conflict_message: conflictMessage,
+      });
+    }
+
+    return {
+      global_strategy: globalStrategy,
+      items,
+      has_conflicts: conflictingFiles > 0 || sameAsInputFiles > 0,
+      has_fatal_errors: false,
+      summary: {
+        total_files: inputPaths.length,
+        conflicting_files: conflictingFiles,
+        safe_files: safeFiles,
+        same_as_input_files: sameAsInputFiles,
+      },
     };
   }
 

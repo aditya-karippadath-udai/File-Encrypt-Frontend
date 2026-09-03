@@ -3,10 +3,10 @@ use tauri::State;
 
 use crate::errors::AppError;
 use crate::models::{
-    BatchSummary, FileDialogOptions, FileMetadata, FileValidationResult, OutputConflictResult,
-    TempFileResult,
+    BatchConflictPlan, BatchSummary, FileDialogOptions, FileMetadata, FileValidationResult,
+    OutputConflictResult, OutputConflictStrategy, TempFileResult,
 };
-use crate::services::FileService;
+use crate::services::{FileService, OutputPathService};
 
 #[tauri::command]
 pub fn select_files(
@@ -18,11 +18,38 @@ pub fn select_files(
 }
 
 #[tauri::command]
+pub fn resolve_dropped_paths(
+    paths: Vec<String>,
+    file_service: State<'_, FileService>,
+) -> Result<Vec<FileValidationResult>, AppError> {
+    info!("Command invoke: resolve_dropped_paths (raw count: {})", paths.len());
+    Ok(file_service.resolve_dropped_paths(paths))
+}
+
+#[tauri::command]
 pub fn select_output_directory(
     file_service: State<'_, FileService>,
 ) -> Result<Option<String>, AppError> {
     info!("Command invoke: select_output_directory");
     file_service.select_output_directory()
+}
+
+#[tauri::command]
+pub fn plan_batch_outputs(
+    input_paths: Vec<String>,
+    output_dir: Option<String>,
+    mode: String,
+    custom_suffix: Option<String>,
+    global_strategy: Option<OutputConflictStrategy>,
+) -> Result<BatchConflictPlan, AppError> {
+    info!("Command invoke: plan_batch_outputs (files: {}, mode: {})", input_paths.len(), mode);
+    OutputPathService::plan_batch_outputs(
+        &input_paths,
+        output_dir.as_deref(),
+        &mode,
+        custom_suffix.as_deref(),
+        global_strategy.unwrap_or(OutputConflictStrategy::Ask),
+    )
 }
 
 #[tauri::command]

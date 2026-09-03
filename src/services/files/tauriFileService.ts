@@ -1,4 +1,4 @@
-import { FileItem } from '../../types';
+import { BatchConflictPlan, FileItem, OutputConflictStrategy } from '../../types';
 import {
   BatchSummary,
   FileDialogOptions,
@@ -42,6 +42,10 @@ export class TauriFileService implements FileService {
       isEncrypted: meta.isEncrypted,
       validationStatus: 'ready',
     }));
+  }
+
+  async resolveDroppedPaths(paths: string[]): Promise<FileValidationResult[]> {
+    return this.invoke<FileValidationResult[]>('resolve_dropped_paths', { paths });
   }
 
   async selectOutputDirectory(): Promise<string | null> {
@@ -93,6 +97,22 @@ export class TauriFileService implements FileService {
     return this.invoke<OutputConflictResult>('check_output_conflict', {
       inputPath,
       outputPath,
+    });
+  }
+
+  async planBatchOutputs(
+    inputPaths: string[],
+    outputDir?: string,
+    mode: 'encrypt' | 'decrypt' = 'encrypt',
+    customSuffix?: string,
+    globalStrategy: OutputConflictStrategy = 'ask'
+  ): Promise<BatchConflictPlan> {
+    return this.invoke<BatchConflictPlan>('plan_batch_outputs', {
+      inputPaths,
+      outputDir: outputDir || null,
+      mode,
+      customSuffix: customSuffix || null,
+      globalStrategy,
     });
   }
 

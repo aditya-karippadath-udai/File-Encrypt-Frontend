@@ -36,8 +36,51 @@ export const FileDropzone: React.FC<FileDropzoneProps> = ({
     setIsDragging(false);
   };
 
-  const processDroppedFiles = (fileList: FileList | null) => {
+  const processDroppedFiles = async (fileList: FileList | null) => {
     if (!fileList || fileList.length === 0) return;
+
+    // Check if any native paths are available (Tauri drag & drop)
+    const nativePaths: string[] = [];
+    Array.from(fileList).forEach((file: any) => {
+      if (file.path) {
+        nativePaths.push(file.path);
+      }
+    });
+
+    if (nativePaths.length > 0) {
+      try {
+        const resolved = await fileService.resolveDroppedPaths(nativePaths);
+        const validItems: FileItem[] = resolved
+          .filter((r) => r.valid && r.metadata)
+          .map((r) => {
+            const meta = r.metadata!;
+            const isEnc =
+              meta.name.endsWith('.enc') ||
+              meta.name.endsWith('.aegis') ||
+              meta.name.endsWith('.vault') ||
+              meta.isEncrypted;
+            return {
+              id: generateId('file'),
+              name: meta.name,
+              size: meta.sizeBytes,
+              type: 'application/octet-stream',
+              path: meta.path,
+              lastModified: meta.modifiedAt ? new Date(meta.modifiedAt).getTime() : Date.now(),
+              isEncrypted: isEnc,
+            };
+          });
+
+        if (validItems.length > 0) {
+          const filtered = encryptedOnly ? validItems.filter((i) => i.isEncrypted) : validItems;
+          if (filtered.length > 0) {
+            onFilesSelected(filtered);
+            return;
+          }
+        }
+      } catch {
+        // Fallback to standard FileList extraction
+      }
+    }
 
     const items: FileItem[] = Array.from(fileList).map((file) => {
       const isEnc =
@@ -47,7 +90,7 @@ export const FileDropzone: React.FC<FileDropzoneProps> = ({
         name: file.name,
         size: file.size,
         type: file.type || 'application/octet-stream',
-        path: file.name,
+        path: (file as any).path || file.name,
         lastModified: file.lastModified || Date.now(),
         isEncrypted: isEnc,
         rawFile: file,

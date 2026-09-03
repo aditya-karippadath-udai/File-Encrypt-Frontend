@@ -41,6 +41,7 @@ pub fn run() {
             commands::health_check,
             // File management commands
             commands::select_files,
+            commands::resolve_dropped_paths,
             commands::select_output_directory,
             commands::get_file_metadata,
             commands::get_files_metadata,
@@ -50,8 +51,16 @@ pub fn run() {
             commands::validate_output_directory,
             commands::generate_output_path,
             commands::check_output_conflict,
+            commands::plan_batch_outputs,
             commands::prepare_temp_output,
             commands::cleanup_temp_file,
+            // Recovery commands
+            commands::detect_stale_temp_files,
+            commands::cleanup_stale_temp_files,
+            // Session operations
+            commands::get_session_operations,
+            commands::get_session_operation,
+            commands::clear_session_operations,
             // Security & Key Derivation commands
             commands::validate_password,
             commands::prepare_key_derivation,

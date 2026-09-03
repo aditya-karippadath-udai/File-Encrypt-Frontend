@@ -4,13 +4,14 @@ import {
   Folder,
   ShieldCheck,
 } from 'lucide-react';
-import { FileItem } from '../types';
+import { BatchConflictPlan, FileItem } from '../types';
 import { useQueueStore } from '../stores/useQueueStore';
 import { useUIStore } from '../stores/useUIStore';
 import { useSettingsStore } from '../stores/useSettingsStore';
 import { useToastStore } from '../stores/useToastStore';
 import { FileDropzone } from '../components/files/FileDropzone';
 import { FileList } from '../components/files/FileList';
+import { ConflictResolutionModal } from '../components/files/ConflictResolutionModal';
 import { PasswordInput } from '../components/password/PasswordInput';
 import { PasswordStrengthMeter } from '../components/password/PasswordStrengthMeter';
 import { Button } from '../components/ui/Button';
@@ -24,6 +25,8 @@ export const EncryptPage: React.FC = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [outputFolderChoice, setOutputFolderChoice] = useState<'same' | 'custom'>('same');
   const [customPath, setCustomPath] = useState('~/Downloads');
+  const [conflictPlan, setConflictPlan] = useState<BatchConflictPlan | null>(null);
+  const [isConflictModalOpen, setIsConflictModalOpen] = useState(false);
 
   const { addFilesToQueue } = useQueueStore();
   const { setActiveTab } = useUIStore();
@@ -83,6 +86,27 @@ export const EncryptPage: React.FC = () => {
 
   const totalBytes = selectedFiles.reduce((acc, f) => acc + f.size, 0);
 
+  const startEncryptionWithFiles = (filesToProcess: FileItem[]) => {
+    // Add to queue
+    addFilesToQueue(filesToProcess, 'encrypt', password, true);
+
+    addToast({
+      type: 'info',
+      title: 'Batch Encryption Started',
+      message: `Enqueued ${filesToProcess.length} file(s) for background processing.`,
+      action: {
+        label: 'View Queue',
+        onClick: () => setActiveTab('queue'),
+      },
+    });
+
+    // Reset local form and switch to queue
+    setSelectedFiles([]);
+    setPassword('');
+    setConfirmPassword('');
+    setActiveTab('queue');
+  };
+
   const handleEncryptSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -117,24 +141,53 @@ export const EncryptPage: React.FC = () => {
       });
     }
 
-    // Add to queue
-    addFilesToQueue(selectedFiles, 'encrypt', password, true);
+    // Plan outputs and detect conflicts
+    try {
+      const outDir = outputFolderChoice === 'custom' ? customPath : undefined;
+      const plan = await fileService.planBatchOutputs(
+        selectedFiles.map((f) => f.path || f.name),
+        outDir,
+        'encrypt',
+        '.enc',
+        settings.defaultConflictStrategy || 'ask'
+      );
 
-    addToast({
-      type: 'info',
-      title: 'Batch Encryption Started',
-      message: `Enqueued ${selectedFiles.length} file(s) for background processing.`,
-      action: {
-        label: 'View Queue',
-        onClick: () => setActiveTab('queue'),
-      },
+      if (plan.has_conflicts) {
+        setConflictPlan(plan);
+        setIsConflictModalOpen(true);
+        return;
+      }
+    } catch {
+      // If planning errors, continue gracefully
+    }
+
+    startEncryptionWithFiles(selectedFiles);
+  };
+
+  const handleApplyConflictPlan = (updatedPlan: BatchConflictPlan) => {
+    setIsConflictModalOpen(false);
+
+    // Filter out skipped files and update paths for renamed files
+    const finalFiles: FileItem[] = [];
+    selectedFiles.forEach((file, idx) => {
+      const planItem = updatedPlan.items[idx];
+      if (planItem && planItem.chosen_action === 'skip') {
+        return; // Skip this file
+      }
+
+      finalFiles.push(file);
     });
 
-    // Reset local form and switch to queue
-    setSelectedFiles([]);
-    setPassword('');
-    setConfirmPassword('');
-    setActiveTab('queue');
+    if (finalFiles.length === 0) {
+      addToast({
+        type: 'info',
+        title: 'All files skipped',
+        message: 'No files to process based on your conflict resolution choices.',
+      });
+      return;
+    }
+
+    startEncryptionWithFiles(finalFiles);
   };
 
   return (
@@ -305,6 +358,16 @@ export const EncryptPage: React.FC = () => {
           </Button>
         </div>
       </form>
+
+      {/* Output Conflict Resolution Modal */}
+      {conflictPlan && (
+        <ConflictResolutionModal
+          isOpen={isConflictModalOpen}
+          conflictPlan={conflictPlan}
+          onApplyPlan={handleApplyConflictPlan}
+          onCancel={() => setIsConflictModalOpen(false)}
+        />
+      )}
     </div>
   );
 };

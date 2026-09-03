@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
+import { RecoveryBanner } from './RecoveryBanner';
 import { ToastContainer } from '../ui/ToastContainer';
 import { FileDetailsModal } from '../files/FileDetailsModal';
 import { useUIStore } from '../../stores/useUIStore';
@@ -45,7 +46,10 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
         } else if (e.key === '5') {
           e.preventDefault();
           setActiveTab('history');
-        } else if (e.key === '6' || e.key === ',') {
+        } else if (e.key === '6') {
+          e.preventDefault();
+          setActiveTab('session');
+        } else if (e.key === '7' || e.key === ',') {
           e.preventDefault();
           setActiveTab('settings');
         }
@@ -71,6 +75,9 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
         {/* Top Header */}
         <Header />
 
+        {/* Stale Temp File Recovery Banner */}
+        <RecoveryBanner />
+
         {/* Scrollable Page Body */}
         <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
           {children}
@@ -83,3 +90,4 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
     </div>
   );
 };
+

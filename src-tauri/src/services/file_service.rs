@@ -173,6 +173,76 @@ impl FileService {
         }
     }
 
+    /// Recursively and safely resolves dropped paths (files and directories) into flat validated files.
+    pub fn resolve_dropped_paths(&self, raw_paths: Vec<String>) -> Vec<FileValidationResult> {
+        let mut discovered_files = Vec::new();
+        let mut seen = HashSet::new();
+
+        for raw_path in raw_paths {
+            let path = Path::new(&raw_path);
+            if !path.exists() {
+                discovered_files.push(raw_path);
+                continue;
+            }
+
+            if path.is_file() {
+                if seen.insert(raw_path.clone()) {
+                    discovered_files.push(raw_path);
+                }
+            } else if path.is_dir() {
+                // Safely traverse directory up to depth 6 and limit 500 files
+                Self::collect_files_recursive(path, 0, 6, 500, &mut seen, &mut discovered_files);
+            }
+        }
+
+        self.validate_files(discovered_files)
+    }
+
+    fn collect_files_recursive(
+        dir: &Path,
+        current_depth: usize,
+        max_depth: usize,
+        max_total: usize,
+        seen: &mut HashSet<String>,
+        collected: &mut Vec<String>,
+    ) {
+        if current_depth > max_depth || collected.len() >= max_total {
+            return;
+        }
+
+        if let Ok(entries) = fs::read_dir(dir) {
+            for entry in entries.flatten() {
+                if collected.len() >= max_total {
+                    break;
+                }
+                let entry_path = entry.path();
+                let path_str = entry_path.to_string_lossy().to_string();
+
+                // Skip hidden files or OS junk (.DS_Store, Thumbs.db, temp files)
+                if let Some(name) = entry_path.file_name().and_then(|n| n.to_str()) {
+                    if name.starts_with('.') || name == "Thumbs.db" {
+                        continue;
+                    }
+                }
+
+                if entry_path.is_file() {
+                    if seen.insert(path_str.clone()) {
+                        collected.push(path_str);
+                    }
+                } else if entry_path.is_dir() {
+                    Self::collect_files_recursive(
+                        &entry_path,
+                        current_depth + 1,
+                        max_depth,
+                        max_total,
+                        seen,
+                        collected,
+                    );
+                }
+            }
+        }
+    }
+
     /// Validates multiple files independently without failing the entire batch.
     pub fn validate_files(&self, paths: Vec<String>) -> Vec<FileValidationResult> {
         paths.iter().map(|p| self.validate_file(p)).collect()

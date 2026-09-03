@@ -6,7 +6,7 @@ use crate::errors::AppError;
 use crate::models::decryption::{DecryptionOperationResult, StartDecryptionBatchRequest};
 use crate::models::{
     EncryptionJob, EncryptionOperation, EncryptionOperationResult, OperationStatus,
-    StartEncryptionBatchRequest,
+    OperationSummary, StartEncryptionBatchRequest,
 };
 use crate::operations::cancellation::CancellationRegistry;
 use crate::operations::decryption_scheduler::{
@@ -230,6 +230,21 @@ impl OperationManager {
         self.registry
             .get_operation(operation_id)
             .ok_or_else(|| AppError::OperationNotFound(format!("Operation {} not found", operation_id)))
+    }
+
+    /// Retrieves all recorded non-persistent session operation summaries.
+    pub fn get_session_operations(&self) -> Vec<OperationSummary> {
+        self.registry.get_session_summaries()
+    }
+
+    /// Retrieves a specific recorded session operation summary.
+    pub fn get_session_operation(&self, operation_id: &str) -> Option<OperationSummary> {
+        self.registry.get_session_summary(operation_id)
+    }
+
+    /// Clears all recorded session operation summaries.
+    pub fn clear_session_operations(&self) {
+        self.registry.clear_session_summaries();
     }
 }
 

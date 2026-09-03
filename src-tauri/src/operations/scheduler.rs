@@ -15,7 +15,7 @@ use crate::crypto::{
 use crate::errors::AppError;
 use crate::models::{
     BatchProgressEvent, EncryptionJob, EncryptionOperation, EncryptionOperationResult,
-    JobProgressEvent, JobResult, JobStatus, OperationStatus, OutputConflictStatus,
+    JobProgressEvent, JobResult, JobStatus, OperationStatus, OperationType, OutputConflictStatus,
 };
 use crate::operations::cancellation::CancellationRegistry;
 use crate::operations::registry::OperationRegistry;
@@ -116,7 +116,7 @@ impl JobScheduler {
 
         operation.started_at = Some(started_at_str.clone());
         let _ = operation.status.transition_to(OperationStatus::Running);
-        self.registry.insert_operation(operation.clone());
+        self.registry.insert_operation(operation.clone(), OperationType::Encrypt);
 
         // Emit initial operation status
         emitter.emit_operation_status(&BatchProgressEvent {
@@ -125,6 +125,7 @@ impl JobScheduler {
             completed_files: 0,
             failed_files: 0,
             cancelled_files: 0,
+            skipped_files: 0,
             total_bytes: operation.total_bytes,
             processed_bytes: 0,
             percentage: 0.0,
@@ -257,6 +258,9 @@ impl JobScheduler {
             });
         }
 
+        // Record session summary into in-memory registry
+        self.registry.record_session_summary(&final_op, OperationType::Encrypt, duration_ms);
+
         // Emit final terminal events
         emitter.emit_operation_status(&BatchProgressEvent {
             operation_id: op_id.clone(),
@@ -264,6 +268,7 @@ impl JobScheduler {
             completed_files: final_op.completed_files,
             failed_files: final_op.failed_files,
             cancelled_files: final_op.cancelled_files,
+            skipped_files: final_op.skipped_files,
             total_bytes: final_op.total_bytes,
             processed_bytes: final_op.processed_bytes,
             percentage: final_op.progress_percentage(),
@@ -274,8 +279,8 @@ impl JobScheduler {
         self.cancellation.cleanup_operation(&op_id);
 
         info!(
-            "Batch operation {} finished in {}ms. Status: {:?} (Success: {}, Failed: {}, Cancelled: {})",
-            op_id, duration_ms, final_op.status, final_op.completed_files, final_op.failed_files, final_op.cancelled_files
+            "Batch operation {} finished in {}ms. Status: {:?} (Success: {}, Failed: {}, Cancelled: {}, Skipped: {})",
+            op_id, duration_ms, final_op.status, final_op.completed_files, final_op.failed_files, final_op.cancelled_files, final_op.skipped_files
         );
 
         Ok(EncryptionOperationResult {
@@ -285,6 +290,7 @@ impl JobScheduler {
             successful_files: final_op.completed_files,
             failed_files: final_op.failed_files,
             cancelled_files: final_op.cancelled_files,
+            skipped_files: final_op.skipped_files,
             total_bytes: final_op.total_bytes,
             processed_bytes: final_op.processed_bytes,
             duration_ms,
@@ -700,6 +706,7 @@ impl JobScheduler {
                 completed_files: op.completed_files,
                 failed_files: op.failed_files,
                 cancelled_files: op.cancelled_files,
+                skipped_files: op.skipped_files,
                 total_bytes: op.total_bytes,
                 processed_bytes: op.processed_bytes,
                 percentage: op.progress_percentage(),

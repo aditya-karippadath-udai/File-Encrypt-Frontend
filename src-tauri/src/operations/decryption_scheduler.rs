@@ -16,7 +16,10 @@ use crate::errors::AppError;
 use crate::models::decryption::{
     DecryptionJobProgressPayload, DecryptionOperationResult, DecryptionProgressPayload,
 };
-use crate::models::operation::{BatchJobStatus, BatchOperationStatus, EncryptionJob, EncryptionOperation, JobResultItem};
+use crate::models::operation::{
+    BatchJobStatus, BatchOperationStatus, EncryptionJob, EncryptionOperation, JobResultItem,
+    OperationType,
+};
 use crate::operations::cancellation::CancellationRegistry;
 use crate::operations::registry::OperationRegistry;
 use crate::services::file_service::FileService;
@@ -112,7 +115,7 @@ impl DecryptionScheduler {
 
         operation.started_at = Some(started_at_str.clone());
         let _ = operation.status.transition_to(BatchOperationStatus::Running);
-        self.registry.insert_operation(operation.clone());
+        self.registry.insert_operation(operation.clone(), OperationType::Decrypt);
 
         // Emit initial operation status
         emitter.emit_operation_status(&DecryptionProgressPayload {
@@ -121,6 +124,7 @@ impl DecryptionScheduler {
             completed_files: 0,
             failed_files: 0,
             cancelled_files: 0,
+            skipped_files: 0,
             total_bytes: operation.total_bytes,
             processed_bytes: 0,
             percentage: 0.0,
@@ -250,6 +254,9 @@ impl DecryptionScheduler {
             });
         }
 
+        // Record session summary into in-memory registry
+        self.registry.record_session_summary(&final_op, OperationType::Decrypt, duration_ms);
+
         // Emit final status
         emitter.emit_operation_status(&DecryptionProgressPayload {
             operation_id: op_id.clone(),
@@ -257,6 +264,7 @@ impl DecryptionScheduler {
             completed_files: final_op.completed_files,
             failed_files: final_op.failed_files,
             cancelled_files: final_op.cancelled_files,
+            skipped_files: final_op.skipped_files,
             total_bytes: final_op.total_bytes,
             processed_bytes: final_op.processed_bytes,
             percentage: final_op.progress_percentage(),
@@ -266,8 +274,8 @@ impl DecryptionScheduler {
         self.cancellation.cleanup_operation(&op_id);
 
         info!(
-            "Batch decryption {} completed in {}ms. Status: {:?} (Success: {}, Failed: {}, Cancelled: {})",
-            op_id, duration_ms, final_op.status, final_op.completed_files, final_op.failed_files, final_op.cancelled_files
+            "Batch decryption {} completed in {}ms. Status: {:?} (Success: {}, Failed: {}, Cancelled: {}, Skipped: {})",
+            op_id, duration_ms, final_op.status, final_op.completed_files, final_op.failed_files, final_op.cancelled_files, final_op.skipped_files
         );
 
         Ok(DecryptionOperationResult {
@@ -277,6 +285,7 @@ impl DecryptionScheduler {
             successful_files: final_op.completed_files,
             failed_files: final_op.failed_files,
             cancelled_files: final_op.cancelled_files,
+            skipped_files: final_op.skipped_files,
             total_bytes: final_op.total_bytes,
             processed_bytes: final_op.processed_bytes,
             duration_ms,
@@ -737,6 +746,7 @@ impl DecryptionScheduler {
                 completed_files: op.completed_files,
                 failed_files: op.failed_files,
                 cancelled_files: op.cancelled_files,
+                skipped_files: op.skipped_files,
                 total_bytes: op.total_bytes,
                 processed_bytes: op.processed_bytes,
                 percentage: op.progress_percentage(),

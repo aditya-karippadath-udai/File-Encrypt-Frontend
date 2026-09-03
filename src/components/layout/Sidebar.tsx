@@ -1,5 +1,6 @@
 import React from 'react';
 import {
+  Activity,
   LayoutDashboard,
   Lock,
   Unlock,
@@ -48,6 +49,7 @@ export const Sidebar: React.FC = () => {
       badge: activeQueueCount > 0 ? activeQueueCount : undefined,
     },
     { id: 'history', label: 'History', icon: <History className="w-4 h-4" /> },
+    { id: 'session', label: 'Session Activity', icon: <Activity className="w-4 h-4" /> },
     { id: 'settings', label: 'Settings', icon: <Settings className="w-4 h-4" /> },
   ];
 

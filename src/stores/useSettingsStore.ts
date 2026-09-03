@@ -1,10 +1,11 @@
 import { create } from 'zustand';
-import { AppSettings, OutputBehavior, ThemeMode } from '../types';
+import { AppSettings, OutputBehavior, OutputConflictStrategy, ThemeMode } from '../types';
 
 interface SettingsState {
   settings: AppSettings;
   setTheme: (theme: ThemeMode) => void;
   setOutputBehavior: (behavior: OutputBehavior) => void;
+  setDefaultConflictStrategy: (strategy: OutputConflictStrategy) => void;
   setCustomOutputPath: (path: string) => void;
   setPreserveOriginal: (preserve: boolean) => void;
   setOverwriteProtection: (protect: boolean) => void;
@@ -34,6 +35,7 @@ export function applyTheme(theme: ThemeMode) {
 const DEFAULT_SETTINGS: AppSettings = {
   theme: 'dark',
   outputBehavior: 'same-folder',
+  defaultConflictStrategy: 'ask',
   customOutputPath: '~/Documents/Aegis-Encrypted',
   preserveOriginal: true,
   overwriteProtection: true,
@@ -102,6 +104,13 @@ export const useSettingsStore = create<SettingsState>((set) => ({
   setOutputBehavior: (outputBehavior) =>
     set((state) => {
       const newSettings = { ...state.settings, outputBehavior };
+      saveSettings(newSettings);
+      return { settings: newSettings };
+    }),
+
+  setDefaultConflictStrategy: (defaultConflictStrategy) =>
+    set((state) => {
+      const newSettings = { ...state.settings, defaultConflictStrategy };
       saveSettings(newSettings);
       return { settings: newSettings };
     }),

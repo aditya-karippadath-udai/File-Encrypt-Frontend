@@ -1,6 +1,6 @@
 export type OperationType = 'encrypt' | 'decrypt';
 
-export type FileStatus = 'waiting' | 'processing' | 'paused' | 'completed' | 'failed' | 'cancelled';
+export type FileStatus = 'waiting' | 'processing' | 'paused' | 'completed' | 'failed' | 'cancelled' | 'skipped';
 
 export type BatchOperationStatus =
   | 'created'
@@ -16,11 +16,13 @@ export type BatchJobStatus =
   | 'queued'
   | 'preparing'
   | 'encrypting'
+  | 'decrypting'
   | 'finalizing'
   | 'completed'
   | 'failed'
   | 'cancelling'
-  | 'cancelled';
+  | 'cancelled'
+  | 'skipped';
 
 export interface FileItem {
   id: string;
@@ -69,6 +71,7 @@ export interface BatchEncryptionOperation {
   completed_files: number;
   failed_files: number;
   cancelled_files: number;
+  skipped_files?: number;
   total_bytes: number;
   processed_bytes: number;
   created_at: string;
@@ -83,6 +86,7 @@ export interface BatchProgressPayload {
   completed_files: number;
   failed_files: number;
   cancelled_files: number;
+  skipped_files?: number;
   total_bytes: number;
   processed_bytes: number;
   percentage: number;
@@ -121,6 +125,7 @@ export interface BatchOperationResult {
   successful_files: number;
   failed_files: number;
   cancelled_files: number;
+  skipped_files?: number;
   total_bytes: number;
   processed_bytes: number;
   duration_ms: number;
@@ -136,6 +141,7 @@ export interface StartBatchRequest {
   concurrency?: number;
   overwrite?: boolean;
   rawFiles?: File[];
+  conflict_plan?: BatchConflictPlan;
 }
 
 export interface EncryptionOperation {
@@ -177,12 +183,113 @@ export interface EncryptedFileDetectionResult {
   error?: string;
 }
 
+// ----------------------------------------------------
+// Phase 7: Conflict Resolution Types
+// ----------------------------------------------------
+
+export type OutputConflictStrategy = 'ask' | 'skip' | 'rename' | 'overwrite' | 'cancel';
+
+export type ConflictAction = 'skip' | 'rename' | 'overwrite';
+
+export type ConflictType =
+  | 'none'
+  | 'file_exists'
+  | 'same_as_input'
+  | 'parent_missing'
+  | 'invalid_path'
+  | 'internal_collision';
+
+export interface PlannedOutputItem {
+  job_id: string;
+  input_path: string;
+  input_filename: string;
+  proposed_output_path: string;
+  proposed_output_name: string;
+  conflict_type: ConflictType;
+  can_overwrite: boolean;
+  chosen_action: ConflictAction;
+  resolved_output_path: string;
+  resolved_output_name: string;
+  conflict_message?: string;
+}
+
+export interface ConflictSummary {
+  total_files: number;
+  conflicting_files: number;
+  safe_files: number;
+  same_as_input_files: number;
+}
+
+export interface BatchConflictPlan {
+  global_strategy: OutputConflictStrategy;
+  items: PlannedOutputItem[];
+  has_conflicts: boolean;
+  has_fatal_errors: boolean;
+  summary: ConflictSummary;
+}
+
+// ----------------------------------------------------
+// Phase 7: Stale Temporary File Recovery Types
+// ----------------------------------------------------
+
+export interface StaleTempFile {
+  path: string;
+  filename: string;
+  parent_directory: string;
+  size_bytes: number;
+  created_at?: string;
+  modified_at?: string;
+  age_secs: number;
+}
+
+export interface StaleCleanupResult {
+  cleaned_count: number;
+  cleaned_bytes: number;
+  failed_paths: string[];
+}
+
+// ----------------------------------------------------
+// Phase 7: Session Summary & Non-Persistent History
+// ----------------------------------------------------
+
+export interface JobSummary {
+  job_id: string;
+  input_path: string;
+  input_filename: string;
+  output_path?: string;
+  output_filename?: string;
+  status: BatchJobStatus;
+  duration_ms: number;
+  bytes_processed: number;
+  total_bytes: number;
+  safe_error?: string;
+  is_skipped: boolean;
+}
+
+export interface OperationSummary {
+  operation_id: string;
+  operation_type: OperationType;
+  status: BatchOperationStatus;
+  started_at: string;
+  completed_at?: string;
+  duration_ms: number;
+  total_files: number;
+  completed_files: number;
+  failed_files: number;
+  cancelled_files: number;
+  skipped_files: number;
+  total_bytes: number;
+  processed_bytes: number;
+  jobs: JobSummary[];
+}
+
 export type ThemeMode = 'dark' | 'light' | 'system';
 export type OutputBehavior = 'same-folder' | 'custom-folder' | 'ask';
 
 export interface AppSettings {
   theme: ThemeMode;
   outputBehavior: OutputBehavior;
+  defaultConflictStrategy: OutputConflictStrategy;
   customOutputPath: string;
   preserveOriginal: boolean;
   overwriteProtection: boolean;
@@ -200,7 +307,7 @@ export interface HistoryItem {
   originalSize: number;
   outputSize: number;
   operation: OperationType;
-  status: 'completed' | 'failed' | 'cancelled';
+  status: 'completed' | 'failed' | 'cancelled' | 'skipped';
   timestamp: number;
   durationMs: number;
   outputPath: string;
@@ -223,4 +330,4 @@ export interface ToastNotification {
   };
 }
 
-export type ActiveTab = 'dashboard' | 'encrypt' | 'decrypt' | 'queue' | 'history' | 'settings';
+export type ActiveTab = 'dashboard' | 'encrypt' | 'decrypt' | 'queue' | 'history' | 'session' | 'settings';

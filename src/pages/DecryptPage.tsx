@@ -4,12 +4,14 @@ import {
   Folder,
   KeyRound,
 } from 'lucide-react';
-import { FileItem } from '../types';
+import { BatchConflictPlan, FileItem } from '../types';
 import { useQueueStore } from '../stores/useQueueStore';
 import { useUIStore } from '../stores/useUIStore';
+import { useSettingsStore } from '../stores/useSettingsStore';
 import { useToastStore } from '../stores/useToastStore';
 import { FileDropzone } from '../components/files/FileDropzone';
 import { FileList } from '../components/files/FileList';
+import { ConflictResolutionModal } from '../components/files/ConflictResolutionModal';
 import { PasswordInput } from '../components/password/PasswordInput';
 import { Button } from '../components/ui/Button';
 import { fileService } from '../services/files';
@@ -21,9 +23,12 @@ export const DecryptPage: React.FC = () => {
   const [password, setPassword] = useState('');
   const [outputFolderChoice, setOutputFolderChoice] = useState<'same' | 'custom'>('same');
   const [customPath, setCustomPath] = useState('~/Downloads');
+  const [conflictPlan, setConflictPlan] = useState<BatchConflictPlan | null>(null);
+  const [isConflictModalOpen, setIsConflictModalOpen] = useState(false);
 
   const { addFilesToQueue } = useQueueStore();
   const { setActiveTab } = useUIStore();
+  const { settings } = useSettingsStore();
   const { addToast } = useToastStore();
 
   // Check for pre-loaded files from dashboard drop
@@ -75,6 +80,24 @@ export const DecryptPage: React.FC = () => {
   const isFormValid = selectedFiles.length > 0 && password.length > 0;
   const totalBytes = selectedFiles.reduce((acc, f) => acc + f.size, 0);
 
+  const startDecryptionWithFiles = (filesToProcess: FileItem[]) => {
+    addFilesToQueue(filesToProcess, 'decrypt', password, true);
+
+    addToast({
+      type: 'info',
+      title: 'Decryption Started',
+      message: `Enqueued ${filesToProcess.length} file(s) for authentication and extraction.`,
+      action: {
+        label: 'View Queue',
+        onClick: () => setActiveTab('queue'),
+      },
+    });
+
+    setSelectedFiles([]);
+    setPassword('');
+    setActiveTab('queue');
+  };
+
   const handleDecryptSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -97,21 +120,51 @@ export const DecryptPage: React.FC = () => {
       return;
     }
 
-    addFilesToQueue(selectedFiles, 'decrypt', password, true);
+    // Plan outputs and detect conflicts
+    try {
+      const outDir = outputFolderChoice === 'custom' ? customPath : undefined;
+      const plan = await fileService.planBatchOutputs(
+        selectedFiles.map((f) => f.path || f.name),
+        outDir,
+        'decrypt',
+        undefined,
+        settings.defaultConflictStrategy || 'ask'
+      );
 
-    addToast({
-      type: 'info',
-      title: 'Decryption Started',
-      message: `Enqueued ${selectedFiles.length} file(s) for authentication and extraction.`,
-      action: {
-        label: 'View Queue',
-        onClick: () => setActiveTab('queue'),
-      },
+      if (plan.has_conflicts) {
+        setConflictPlan(plan);
+        setIsConflictModalOpen(true);
+        return;
+      }
+    } catch {
+      // If planning fails, proceed smoothly
+    }
+
+    startDecryptionWithFiles(selectedFiles);
+  };
+
+  const handleApplyConflictPlan = (updatedPlan: BatchConflictPlan) => {
+    setIsConflictModalOpen(false);
+
+    const finalFiles: FileItem[] = [];
+    selectedFiles.forEach((file, idx) => {
+      const planItem = updatedPlan.items[idx];
+      if (planItem && planItem.chosen_action === 'skip') {
+        return;
+      }
+      finalFiles.push(file);
     });
 
-    setSelectedFiles([]);
-    setPassword('');
-    setActiveTab('queue');
+    if (finalFiles.length === 0) {
+      addToast({
+        type: 'info',
+        title: 'All files skipped',
+        message: 'No files to process based on your conflict resolution choices.',
+      });
+      return;
+    }
+
+    startDecryptionWithFiles(finalFiles);
   };
 
   return (
@@ -261,6 +314,16 @@ export const DecryptPage: React.FC = () => {
           </Button>
         </div>
       </form>
+
+      {/* Conflict Resolution Modal */}
+      {conflictPlan && (
+        <ConflictResolutionModal
+          isOpen={isConflictModalOpen}
+          conflictPlan={conflictPlan}
+          onApplyPlan={handleApplyConflictPlan}
+          onCancel={() => setIsConflictModalOpen(false)}
+        />
+      )}
     </div>
   );
 };

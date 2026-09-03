@@ -14,6 +14,7 @@ import {
   Lock,
   Terminal,
   Activity,
+  AlertTriangle,
 } from 'lucide-react';
 import { useSettingsStore } from '../stores/useSettingsStore';
 import { useToastStore } from '../stores/useToastStore';
@@ -22,13 +23,14 @@ import { desktopService } from '../services/desktop/desktopService';
 import { securityService } from '../services/security';
 import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
-import { ThemeMode, OutputBehavior } from '../types';
+import { ThemeMode, OutputBehavior, OutputConflictStrategy } from '../types';
 
 export const SettingsPage: React.FC = () => {
   const {
     settings,
     setTheme,
     setOutputBehavior,
+    setDefaultConflictStrategy,
     setCustomOutputPath,
     setPreserveOriginal,
     setOverwriteProtection,
@@ -253,6 +255,33 @@ export const SettingsPage: React.FC = () => {
                 </Button>
               </div>
             )}
+
+            {/* Default Conflict Strategy */}
+            <div className="space-y-2 pt-2 border-t border-slate-200 dark:border-[#1F2937]">
+              <label className="text-[#1E293B] dark:text-[#CBD5E1] font-medium block">
+                Default Collision & Conflict Strategy
+              </label>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                {[
+                  { id: 'ask' as OutputConflictStrategy, label: 'Always Prompt (Ask)' },
+                  { id: 'rename' as OutputConflictStrategy, label: 'Auto-Rename (1)' },
+                  { id: 'skip' as OutputConflictStrategy, label: 'Skip Existing' },
+                  { id: 'overwrite' as OutputConflictStrategy, label: 'Overwrite' },
+                ].map((s) => (
+                  <button
+                    key={s.id}
+                    onClick={() => setDefaultConflictStrategy(s.id)}
+                    className={`p-2.5 rounded-lg border text-center font-medium text-[11px] transition-all cursor-pointer ${
+                      settings.defaultConflictStrategy === s.id
+                        ? 'border-[#2563EB] bg-blue-500/10 text-[#2563EB] dark:text-[#60A5FA]'
+                        : 'border-slate-200 dark:border-[#1F2937] bg-slate-50/70 dark:bg-[#090D12]/80 text-[#64748B] hover:border-slate-300 dark:hover:border-slate-700'
+                    }`}
+                  >
+                    {s.label}
+                  </button>
+                ))}
+              </div>
+            </div>
 
             {/* Toggles */}
             <div className="pt-2 border-t border-slate-200 dark:border-[#1F2937] space-y-3">
