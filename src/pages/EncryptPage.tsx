@@ -3,6 +3,7 @@ import {
   Lock,
   Folder,
   ShieldCheck,
+  Zap,
 } from 'lucide-react';
 import { BatchConflictPlan, FileItem } from '../types';
 import { useQueueStore } from '../stores/useQueueStore';
@@ -10,6 +11,8 @@ import { useUIStore } from '../stores/useUIStore';
 import { useSettingsStore } from '../stores/useSettingsStore';
 import { useToastStore } from '../stores/useToastStore';
 import { FileDropzone } from '../components/files/FileDropzone';
+import { QuickQueueDropzone } from '../components/files/QuickQueueDropzone';
+import { QuickQueueModal } from '../components/queue/QuickQueueModal';
 import { FileList } from '../components/files/FileList';
 import { ConflictResolutionModal } from '../components/files/ConflictResolutionModal';
 import { PasswordInput } from '../components/password/PasswordInput';
@@ -27,6 +30,8 @@ export const EncryptPage: React.FC = () => {
   const [customPath, setCustomPath] = useState('~/Downloads');
   const [conflictPlan, setConflictPlan] = useState<BatchConflictPlan | null>(null);
   const [isConflictModalOpen, setIsConflictModalOpen] = useState(false);
+  const [quickQueueFiles, setQuickQueueFiles] = useState<FileItem[]>([]);
+  const [isQuickQueueModalOpen, setIsQuickQueueModalOpen] = useState(false);
 
   const { addFilesToQueue } = useQueueStore();
   const { setActiveTab } = useUIStore();
@@ -105,6 +110,48 @@ export const EncryptPage: React.FC = () => {
     setPassword('');
     setConfirmPassword('');
     setActiveTab('queue');
+  };
+
+  const handleDirectQuickEnqueue = (filesToEnqueue: FileItem[]) => {
+    if (!isPasswordValid || !passwordsMatch) {
+      setQuickQueueFiles(filesToEnqueue);
+      setIsQuickQueueModalOpen(true);
+      return;
+    }
+
+    addFilesToQueue(filesToEnqueue, 'encrypt', password, true);
+
+    addToast({
+      type: 'success',
+      title: 'Batch Encryption Enqueued',
+      message: `Enqueued ${filesToEnqueue.length} file(s) directly to processing queue.`,
+      action: {
+        label: 'View Queue',
+        onClick: () => setActiveTab('queue'),
+      },
+    });
+
+    setActiveTab('queue');
+  };
+
+  const handleQuickQueueFilesDropped = (files: FileItem[]) => {
+    if (isPasswordValid && passwordsMatch) {
+      handleDirectQuickEnqueue(files);
+    } else {
+      setQuickQueueFiles(files);
+      setIsQuickQueueModalOpen(true);
+    }
+  };
+
+  const handleQuickEnqueueStaged = () => {
+    if (selectedFiles.length === 0) return;
+    if (isPasswordValid && passwordsMatch) {
+      handleDirectQuickEnqueue(selectedFiles);
+      setSelectedFiles([]);
+    } else {
+      setQuickQueueFiles(selectedFiles);
+      setIsQuickQueueModalOpen(true);
+    }
   };
 
   const handleEncryptSubmit = async (e: React.FormEvent) => {
@@ -206,21 +253,47 @@ export const EncryptPage: React.FC = () => {
       </div>
 
       <form onSubmit={handleEncryptSubmit} className="space-y-6">
-        {/* Dropzone */}
-        <FileDropzone
-          onFilesSelected={handleFilesAdded}
-          title="Drop files here to encrypt"
-          subtitle="Support for any file format, archives, databases, documents, and media"
-        />
+        {/* Dual Drag & Drop Zones: Standard Staging vs Direct Quick Queue */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <FileDropzone
+            onFilesSelected={handleFilesAdded}
+            title="Stage Files for Batch"
+            subtitle="Add files to review, inspect metadata, or configure custom destination below"
+          />
+
+          <QuickQueueDropzone
+            onFilesSelected={handleQuickQueueFilesDropped}
+            onQuickEnqueueDirect={handleDirectQuickEnqueue}
+            activePassword={password}
+            isPasswordValid={passwordsMatch && isPasswordValid}
+            title="Quick Queue Dropzone"
+            subtitle="Drop files here to immediately add to background processing queue"
+          />
+        </div>
 
         {/* Selected files list */}
         {selectedFiles.length > 0 && (
-          <FileList
-            files={selectedFiles}
-            onRemoveFile={handleRemoveFile}
-            onClearAll={handleClearAll}
-            title="Files to Encrypt"
-          />
+          <div className="space-y-2">
+            <div className="flex items-center justify-between px-1">
+              <span className="text-xs font-semibold text-[#1E293B] dark:text-[#CBD5E1]">
+                Staged Batch Files ({selectedFiles.length})
+              </span>
+              <button
+                type="button"
+                onClick={handleQuickEnqueueStaged}
+                className="text-xs font-semibold text-[#2563EB] dark:text-[#60A5FA] hover:underline flex items-center gap-1.5 cursor-pointer"
+              >
+                <Zap className="w-3.5 h-3.5" />
+                Quick Enqueue Staged Files
+              </button>
+            </div>
+            <FileList
+              files={selectedFiles}
+              onRemoveFile={handleRemoveFile}
+              onClearAll={handleClearAll}
+              title="Files to Encrypt"
+            />
+          </div>
         )}
 
         {/* Password & Security Configuration */}
@@ -368,6 +441,15 @@ export const EncryptPage: React.FC = () => {
           onCancel={() => setIsConflictModalOpen(false)}
         />
       )}
+
+      {/* Quick Queue Modal */}
+      <QuickQueueModal
+        isOpen={isQuickQueueModalOpen}
+        files={quickQueueFiles}
+        initialType="encrypt"
+        initialPassword={password}
+        onClose={() => setIsQuickQueueModalOpen(false)}
+      />
     </div>
   );
 };

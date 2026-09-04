@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Lock,
   Unlock,
@@ -10,11 +10,13 @@ import {
   Cpu,
   Layers,
   FileCheck,
+  Zap,
 } from 'lucide-react';
 import { useUIStore } from '../stores/useUIStore';
 import { useHistoryStore } from '../stores/useHistoryStore';
 import { useQueueStore } from '../stores/useQueueStore';
-import { FileDropzone } from '../components/files/FileDropzone';
+import { QuickQueueDropzone } from '../components/files/QuickQueueDropzone';
+import { QuickQueueModal } from '../components/queue/QuickQueueModal';
 import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
 import { formatBytes, formatDateTime } from '../utils/formatters';
@@ -24,6 +26,9 @@ export const DashboardPage: React.FC = () => {
   const { setActiveTab } = useUIStore();
   const { history } = useHistoryStore();
   const { operations, addFilesToQueue } = useQueueStore();
+
+  const [quickQueueFiles, setQuickQueueFiles] = useState<FileItem[]>([]);
+  const [isQuickQueueModalOpen, setIsQuickQueueModalOpen] = useState(false);
 
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -42,16 +47,8 @@ export const DashboardPage: React.FC = () => {
   ).length;
 
   const handleDashboardFilesDropped = (files: FileItem[]) => {
-    // If files are encrypted (.enc), redirect to Decrypt with those files preloaded
-    // Otherwise redirect to Encrypt
-    const hasEncrypted = files.some((f) => f.isEncrypted || f.name.endsWith('.enc'));
-    if (hasEncrypted) {
-      sessionStorage.setItem('aegis_pending_decrypt_files', JSON.stringify(files));
-      setActiveTab('decrypt');
-    } else {
-      sessionStorage.setItem('aegis_pending_encrypt_files', JSON.stringify(files));
-      setActiveTab('encrypt');
-    }
+    setQuickQueueFiles(files);
+    setIsQuickQueueModalOpen(true);
   };
 
   return (
@@ -88,11 +85,12 @@ export const DashboardPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Main Dropzone Section */}
-      <FileDropzone
+      {/* Quick Queue Dropzone Section */}
+      <QuickQueueDropzone
         onFilesSelected={handleDashboardFilesDropped}
-        title="Drop files here to start"
-        subtitle="Auto-detects plain files for encryption or .enc containers for decryption"
+        title="Drop files here to quickly add to processing queue"
+        subtitle="Auto-detects plain or encrypted files, configures password, and dispatches directly to background queue"
+        badgeText="QUICK QUEUE PIPELINE"
       />
 
       {/* Statistics Row */}
@@ -265,6 +263,13 @@ export const DashboardPage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Quick Queue Modal */}
+      <QuickQueueModal
+        isOpen={isQuickQueueModalOpen}
+        files={quickQueueFiles}
+        onClose={() => setIsQuickQueueModalOpen(false)}
+      />
     </div>
   );
 };
