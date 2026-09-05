@@ -90,8 +90,46 @@ impl OutputPathService {
         clean = clean.trim().trim_matches('.').to_string();
 
         if clean.is_empty() {
-            "file".to_string()
-        } else if clean.len() > 255 {
+            clean = "file".to_string();
+        }
+
+        // Check Windows reserved device names (CON, PRN, AUX, NUL, COM1-9, LPT1-9)
+        let stem = match clean.find('.') {
+            Some(idx) => &clean[..idx],
+            None => &clean,
+        };
+        let stem_upper = stem.to_ascii_uppercase();
+        let is_reserved = matches!(
+            stem_upper.as_str(),
+            "CON"
+                | "PRN"
+                | "AUX"
+                | "NUL"
+                | "COM1"
+                | "COM2"
+                | "COM3"
+                | "COM4"
+                | "COM5"
+                | "COM6"
+                | "COM7"
+                | "COM8"
+                | "COM9"
+                | "LPT1"
+                | "LPT2"
+                | "LPT3"
+                | "LPT4"
+                | "LPT5"
+                | "LPT6"
+                | "LPT7"
+                | "LPT8"
+                | "LPT9"
+        );
+
+        if is_reserved {
+            clean = format!("_{}", clean);
+        }
+
+        if clean.len() > 255 {
             clean[..255].to_string()
         } else {
             clean

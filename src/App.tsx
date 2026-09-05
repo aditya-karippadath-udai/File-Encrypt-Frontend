@@ -3,10 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { AppLayout } from './components/layout/AppLayout';
 import { useUIStore } from './stores/useUIStore';
+import { ErrorBoundary } from './components/ui/ErrorBoundary';
 import { DashboardPage } from './pages/DashboardPage';
 import { EncryptPage } from './pages/EncryptPage';
 import { DecryptPage } from './pages/DecryptPage';
@@ -16,7 +17,18 @@ import { SessionPage } from './pages/SessionPage';
 import { SettingsPage } from './pages/SettingsPage';
 
 export default function App() {
-  const { activeTab } = useUIStore();
+  const { activeTab, setActiveTab } = useUIStore();
+
+  useEffect(() => {
+    const handleNavigate = (event: Event) => {
+      const customEvent = event as CustomEvent<{ tab?: string }>;
+      if (customEvent.detail?.tab) {
+        setActiveTab(customEvent.detail.tab as any);
+      }
+    };
+    window.addEventListener('aegis:navigate', handleNavigate);
+    return () => window.removeEventListener('aegis:navigate', handleNavigate);
+  }, [setActiveTab]);
 
   const renderActivePage = () => {
     switch (activeTab) {
@@ -41,18 +53,20 @@ export default function App() {
 
   return (
     <AppLayout>
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={activeTab}
-          initial={{ opacity: 0, y: 6 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -6 }}
-          transition={{ duration: 0.15, ease: 'easeOut' }}
-          className="h-full"
-        >
-          {renderActivePage()}
-        </motion.div>
-      </AnimatePresence>
+      <ErrorBoundary onReset={() => setActiveTab('dashboard')}>
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={activeTab}
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.15, ease: 'easeOut' }}
+            className="h-full"
+          >
+            {renderActivePage()}
+          </motion.div>
+        </AnimatePresence>
+      </ErrorBoundary>
     </AppLayout>
   );
 }

@@ -1,0 +1,9 @@
+{
+  "$schema": "https://raw.githubusercontent.com/tauri-apps/tauri/v2/crates/tauri-config-schema/schema.json",
+  "identifier": "default-capability",
+  "description": "Least-privilege capability set for Aegis File Encryption Tool desktop window",
+  "windows": ["main"],
+  "permissions": [
+    "core:default"
+  ]
+}

@@ -12,13 +12,14 @@
   "app": {
     "withGlobalTauri": false,
     "security": {
-      "csp": null
+      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self';"
     },
     "windows": [
       {
-        "title": "Aegis File Encryption",
-        "width": 1100,
-        "height": 780,
+        "label": "main",
+        "title": "File Encryption Tool",
+        "width": 1180,
+        "height": 820,
         "minWidth": 800,
         "minHeight": 600,
         "resizable": true,
@@ -37,6 +38,23 @@
       "icons/128x128@2x.png",
       "icons/icon.icns",
       "icons/icon.ico"
-    ]
+    ],
+    "copyright": "© 2026 Aegis Security Team. All rights reserved.",
+    "category": "Utility",
+    "shortDescription": "Local-first desktop file encryption and decryption tool",
+    "longDescription": "Aegis File Encryption Tool is a secure, local-first desktop utility providing authenticated streaming encryption with Argon2id and XChaCha20-Poly1305.",
+    "linux": {
+      "deb": {
+        "depends": []
+      }
+    },
+    "windows": {
+      "certificateThumbprint": null,
+      "digestAlgorithm": "sha256",
+      "timestampUrl": ""
+    },
+    "macOS": {
+      "minimumSystemVersion": "10.13"
+    }
   }
 }

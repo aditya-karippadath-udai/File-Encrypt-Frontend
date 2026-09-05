@@ -74,11 +74,11 @@ pub fn generate_decrypted_output_path(input_path: &Path, output_dir: Option<&Pat
         .unwrap_or("file");
 
     let output_file_name = if file_name.ends_with(".enc") {
-        file_name.strip_suffix(".enc").unwrap().to_string()
+        file_name.strip_suffix(".enc").unwrap_or(file_name).to_string()
     } else if file_name.ends_with(".aegis") {
-        file_name.strip_suffix(".aegis").unwrap().to_string()
+        file_name.strip_suffix(".aegis").unwrap_or(file_name).to_string()
     } else if file_name.ends_with(".vault") {
-        file_name.strip_suffix(".vault").unwrap().to_string()
+        file_name.strip_suffix(".vault").unwrap_or(file_name).to_string()
     } else {
         format!("{}.decrypted", file_name)
     };
