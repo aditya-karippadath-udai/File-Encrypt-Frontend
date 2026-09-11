@@ -11,6 +11,7 @@ use log::info;
 use operations::OperationManager;
 use services::{DecryptionService, EncryptionService, FileService, SecurityService, SystemService};
 use state::AppState;
+use tauri::Manager;
 
 pub fn run() {
     env_logger::Builder::from_default_env()
@@ -35,6 +36,20 @@ pub fn run() {
         .manage(encryption_service)
         .manage(decryption_service)
         .manage(operation_manager)
+        .on_window_event(|window, event| {
+            if let tauri::WindowEvent::CloseRequested { .. } = event {
+                info!(
+                    "Window '{}' close requested. Performing clean shutdown and exiting application...",
+                    window.label()
+                );
+                if let Some(op_manager) = window.try_state::<OperationManager>() {
+                    op_manager.cancel_all();
+                }
+                // Completely terminate the Tauri application process.
+                // Ensures no background process, tray icon, or hidden window remains active.
+                window.app_handle().exit(0);
+            }
+        })
         .invoke_handler(tauri::generate_handler![
             // System commands
             commands::get_app_info,

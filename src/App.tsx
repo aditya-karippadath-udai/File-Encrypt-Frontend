@@ -7,6 +7,7 @@ import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { AppLayout } from './components/layout/AppLayout';
 import { useUIStore } from './stores/useUIStore';
+import { useQueueStore } from './stores/useQueueStore';
 import { ErrorBoundary } from './components/ui/ErrorBoundary';
 import { DashboardPage } from './pages/DashboardPage';
 import { EncryptPage } from './pages/EncryptPage';
@@ -29,6 +30,15 @@ export default function App() {
     window.addEventListener('aegis:navigate', handleNavigate);
     return () => window.removeEventListener('aegis:navigate', handleNavigate);
   }, [setActiveTab]);
+
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      // Abort active background operations cleanly when the window is closed
+      useQueueStore.getState().cancelAll();
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, []);
 
   const renderActivePage = () => {
     switch (activeTab) {

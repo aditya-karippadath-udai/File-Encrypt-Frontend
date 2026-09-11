@@ -25,7 +25,10 @@
         "resizable": true,
         "fullscreen": false,
         "center": true,
-        "decorations": true
+        "decorations": true,
+        "visible": true,
+        "focus": true,
+        "closable": true
       }
     ]
   },

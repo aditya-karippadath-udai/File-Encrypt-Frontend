@@ -246,6 +246,12 @@ impl OperationManager {
     pub fn clear_session_operations(&self) {
         self.registry.clear_session_summaries();
     }
+
+    /// Signals cancellation to all active operations and jobs across the system (used during clean shutdown).
+    pub fn cancel_all(&self) {
+        info!("OperationManager: cancelling all active operations and jobs for clean shutdown.");
+        self.cancellation.cancel_all();
+    }
 }
 
 impl Default for OperationManager {

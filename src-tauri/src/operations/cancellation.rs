@@ -62,6 +62,20 @@ impl CancellationRegistry {
         cancelled_any
     }
 
+    /// Signals cancellation to all active operations and jobs across the system (used during clean shutdown).
+    pub fn cancel_all(&self) {
+        if let Ok(map) = self.operation_tokens.read() {
+            for token in map.values() {
+                token.store(true, Ordering::SeqCst);
+            }
+        }
+        if let Ok(map) = self.job_tokens.read() {
+            for token in map.values() {
+                token.store(true, Ordering::SeqCst);
+            }
+        }
+    }
+
     /// Cancels an individual job within an operation without terminating the entire batch.
     pub fn cancel_job(&self, operation_id: &str, job_id: &str) -> bool {
         if let Ok(map) = self.job_tokens.read() {
