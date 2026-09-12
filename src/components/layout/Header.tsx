@@ -32,9 +32,11 @@ export const Header: React.FC = () => {
       {/* Left: Engine Status Indicator */}
       <div className="flex items-center gap-3">
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-[#2563EB]/10 dark:bg-[#2563EB]/15 border border-[#2563EB]/20 dark:border-[#2563EB]/30 flex items-center justify-center text-[#2563EB] dark:text-[#60A5FA] shadow-xs">
-            <ShieldCheck className="w-4 h-4" />
-          </div>
+          <img
+            src="/icon.png"
+            alt="Aegis Icon"
+            className="w-7 h-7 rounded-lg object-cover shadow-xs border border-slate-200/50 dark:border-slate-700/50"
+          />
           <div>
             <div className="flex items-center gap-1.5">
               <span className="text-xs font-bold text-[#0F172A] dark:text-[#F8FAFC] tracking-wider">AEGIS CRYPT</span>

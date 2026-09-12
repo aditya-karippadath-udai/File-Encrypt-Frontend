@@ -65,9 +65,11 @@ export const Sidebar: React.FC = () => {
         <div className="h-14 px-3.5 flex items-center justify-between border-b border-[#E2E8F0] dark:border-[#1F2937]">
           {!isSidebarCollapsed && (
             <div className="flex items-center gap-2.5 overflow-hidden">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#2563EB] to-[#7C3AED] flex items-center justify-center text-white shadow-lg shadow-blue-500/20 shrink-0">
-                <Shield className="w-4 h-4" />
-              </div>
+              <img
+                src="/icon.png"
+                alt="Aegis Icon"
+                className="w-8 h-8 rounded-lg object-cover shadow-md shadow-blue-500/20 shrink-0 border border-slate-200/50 dark:border-slate-700/50"
+              />
               <div className="flex flex-col min-w-0">
                 <span className="text-sm font-bold text-[#0F172A] dark:text-[#F8FAFC] tracking-tight leading-none">
                   Aegis Crypt
@@ -80,9 +82,11 @@ export const Sidebar: React.FC = () => {
           )}
 
           {isSidebarCollapsed && (
-            <div className="w-8 h-8 mx-auto rounded-lg bg-gradient-to-br from-[#2563EB] to-[#7C3AED] flex items-center justify-center text-white shadow-lg shadow-blue-500/20">
-              <Shield className="w-4 h-4" />
-            </div>
+            <img
+              src="/icon.png"
+              alt="Aegis Icon"
+              className="w-8 h-8 mx-auto rounded-lg object-cover shadow-md shadow-blue-500/20 border border-slate-200/50 dark:border-slate-700/50"
+            />
           )}
 
           <button
