@@ -85,7 +85,7 @@ impl DecryptionService {
 
         // 4. Derive Decryption Key using Argon2id
         info!("Deriving 256-bit decryption key via Argon2id from container salt...");
-        let derived_key = derive_key_argon2id(&request.password, &header.salt, &header.argon2_params)?;
+        let derived_key = derive_key_argon2id(&request.password, header.salt.as_bytes(), Some(&header.argon2_params))?;
 
         // 5. Authenticate and Recover Metadata
         info!("Authenticating and extracting embedded metadata...");

@@ -403,7 +403,7 @@ impl DecryptionScheduler {
         }
 
         // 4. Derive key and recover metadata
-        let derived_key = match derive_key_argon2id(password, &header.salt, &header.argon2_params) {
+        let derived_key = match derive_key_argon2id(password, header.salt.as_bytes(), Some(&header.argon2_params)) {
             Ok(k) => k,
             Err(e) => {
                 Self::handle_job_failure(
@@ -539,7 +539,7 @@ impl DecryptionScheduler {
         let job_id_for_progress = job_id.clone();
         let input_path_for_progress = input_path_str.clone();
 
-        let progress_cb: DecryptionProgressCallback = Box::new(move |bytes_processed, total| {
+        let mut progress_cb = move |bytes_processed: u64, total: u64| {
             let now = Instant::now();
             let mut last_time = last_emit_time.lock().unwrap();
             let prev_bytes = last_emit_bytes.load(Ordering::Relaxed);
@@ -584,15 +584,15 @@ impl DecryptionScheduler {
 
                 Self::emit_aggregated_progress(&op_id_for_progress, &registry_for_progress, &emitter_for_progress);
             }
-        });
+        };
 
         // Setup cancellation closure
         let op_id_for_cancel = operation_id.to_string();
         let job_id_for_cancel = job_id.clone();
         let cancellation_for_stream = Arc::clone(cancellation);
-        let is_cancelled_cb = Box::new(move || {
+        let is_cancelled_cb = move || {
             cancellation_for_stream.is_cancelled(&op_id_for_cancel, Some(&job_id_for_cancel))
-        });
+        };
 
         // 8. Stream decryption
         let stream_res = decrypt_file_stream(
@@ -601,8 +601,8 @@ impl DecryptionScheduler {
             &derived_key,
             &header,
             original_meta.file_size,
-            Some(progress_cb),
-            Some(is_cancelled_cb),
+            Some(&mut progress_cb),
+            Some(&is_cancelled_cb),
         );
 
         match stream_res {

@@ -178,7 +178,7 @@ pub fn recover_authenticated_metadata(
 
     // Reconstruct preamble AAD exactly as built during encryption
     let dummy_header = EncryptedFileHeader::new(
-        header.argon2_params,
+        header.argon2_params.clone(),
         header.salt.clone(),
         header.base_nonce.clone(),
         header.chunk_size,
@@ -429,7 +429,7 @@ mod tests {
         let password = "SuperSecretPassword123!";
         let salt = Salt::generate().unwrap();
         let params = Argon2ParamsConfig::default();
-        let key = derive_key_argon2id(password, &salt, &params).unwrap();
+        let key = derive_key_argon2id(password, salt.as_bytes(), Some(&params)).unwrap();
 
         // Encrypt empty file
         encrypt_file_stream(
@@ -448,7 +448,7 @@ mod tests {
         let mut enc_file = File::open(enc_temp.path()).unwrap();
         let header = EncryptedFileHeader::read_from(&mut enc_file).unwrap();
 
-        let recovered_key = derive_key_argon2id(password, &header.salt, &header.argon2_params).unwrap();
+        let recovered_key = derive_key_argon2id(password, header.salt.as_bytes(), Some(&header.argon2_params)).unwrap();
         let metadata = recover_authenticated_metadata(&header, &recovered_key).unwrap();
         assert_eq!(metadata.file_size, 0);
 
@@ -487,7 +487,7 @@ mod tests {
         let password = "MultiChunkPassword456!";
         let salt = Salt::generate().unwrap();
         let params = Argon2ParamsConfig::default();
-        let key = derive_key_argon2id(password, &salt, &params).unwrap();
+        let key = derive_key_argon2id(password, salt.as_bytes(), Some(&params)).unwrap();
 
         // Encrypt
         encrypt_file_stream(
@@ -505,7 +505,7 @@ mod tests {
         // Parse header
         let mut enc_file = File::open(enc_temp.path()).unwrap();
         let header = EncryptedFileHeader::read_from(&mut enc_file).unwrap();
-        let recovered_key = derive_key_argon2id(password, &header.salt, &header.argon2_params).unwrap();
+        let recovered_key = derive_key_argon2id(password, header.salt.as_bytes(), Some(&header.argon2_params)).unwrap();
         let metadata = recover_authenticated_metadata(&header, &recovered_key).unwrap();
         assert_eq!(metadata.file_size, sample_data.len() as u64);
 
@@ -542,7 +542,7 @@ mod tests {
         let password = "TestPassword123!";
         let salt = Salt::generate().unwrap();
         let params = Argon2ParamsConfig::default();
-        let key = derive_key_argon2id(password, &salt, &params).unwrap();
+        let key = derive_key_argon2id(password, salt.as_bytes(), Some(&params)).unwrap();
 
         encrypt_file_stream(
             input_temp.path(),

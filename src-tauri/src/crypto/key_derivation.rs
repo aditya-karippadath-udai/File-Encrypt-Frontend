@@ -80,6 +80,23 @@ impl Argon2ParamsConfig {
 
         Ok(())
     }
+
+    /// Creates and validates a new Argon2id parameter configuration with standard key length.
+    pub fn new(
+        memory_cost_kib: u32,
+        time_cost_iterations: u32,
+        parallelism_threads: u32,
+    ) -> Result<Self, AppError> {
+        let config = Self {
+            memory_cost_kib,
+            time_cost_iterations,
+            parallelism_threads,
+            output_length_bytes: STANDARD_KEY_LENGTH,
+            algorithm: "Argon2id".to_string(),
+        };
+        config.validate()?;
+        Ok(config)
+    }
 }
 
 /// Secure container for sensitive derived encryption key bytes.
@@ -92,9 +109,20 @@ pub struct DerivedKey {
 }
 
 impl DerivedKey {
-    /// Internal constructor for newly derived key material.
-    pub(crate) fn new(key: Vec<u8>, algorithm: String) -> Self {
-        Self { key, algorithm }
+    /// Constructor for derived key material.
+    pub fn new(key: impl Into<Vec<u8>>) -> Self {
+        Self {
+            key: key.into(),
+            algorithm: "Argon2id".to_string(),
+        }
+    }
+
+    /// Constructor with specific algorithm label.
+    pub fn with_algorithm(key: impl Into<Vec<u8>>, algorithm: String) -> Self {
+        Self {
+            key: key.into(),
+            algorithm,
+        }
     }
 
     /// Length of the derived key in bytes.
@@ -114,6 +142,11 @@ impl DerivedKey {
 
     /// Controlled access to raw key bytes for future cryptographic encryption engines.
     pub fn expose_secret(&self) -> &[u8] {
+        &self.key
+    }
+
+    /// Controlled access to raw key bytes for internal cryptographic engines.
+    pub fn as_bytes(&self) -> &[u8] {
         &self.key
     }
 }
@@ -163,7 +196,7 @@ pub fn derive_key_argon2id(
             AppError::KeyDerivationFailed(format!("Argon2id execution failed: {}", e))
         })?;
 
-    Ok(DerivedKey::new(
+    Ok(DerivedKey::with_algorithm(
         key_buf,
         effective_config.algorithm.clone(),
     ))

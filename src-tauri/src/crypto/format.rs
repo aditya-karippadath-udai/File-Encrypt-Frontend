@@ -123,9 +123,9 @@ impl EncryptedFileHeader {
         preamble.push(self.nonce_strategy_id);
 
         // Argon2 Parameters (4 bytes each, Big-Endian)
-        preamble.extend_from_slice(&self.argon2_params.m_cost.to_be_bytes());
-        preamble.extend_from_slice(&self.argon2_params.t_cost.to_be_bytes());
-        preamble.extend_from_slice(&self.argon2_params.p_cost.to_be_bytes());
+        preamble.extend_from_slice(&self.argon2_params.memory_cost_kib.to_be_bytes());
+        preamble.extend_from_slice(&self.argon2_params.time_cost_iterations.to_be_bytes());
+        preamble.extend_from_slice(&self.argon2_params.parallelism_threads.to_be_bytes());
 
         // Salt (1 byte length + salt bytes)
         let salt_bytes = self.salt.as_bytes();

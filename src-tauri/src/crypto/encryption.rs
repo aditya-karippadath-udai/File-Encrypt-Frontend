@@ -133,7 +133,7 @@ pub fn encrypt_file_stream(
     // 3. Encrypt Metadata using dedicated metadata nonce and preamble as AAD
     let meta_nonce = base_nonce.derive_chunk_nonce(METADATA_CHUNK_INDEX);
     let dummy_header = EncryptedFileHeader::new(
-        argon2_params,
+        argon2_params.clone(),
         salt.clone(),
         base_nonce.clone(),
         chunk_size,

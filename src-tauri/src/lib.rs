@@ -9,7 +9,10 @@ pub mod utils;
 
 use log::info;
 use operations::OperationManager;
-use services::{DecryptionService, EncryptionService, FileService, SecurityService, SystemService};
+use services::{
+    DecryptionService, EncryptionService, FileService, RecoveryService, SecurityService,
+    SystemService,
+};
 use state::AppState;
 use tauri::Manager;
 
@@ -23,6 +26,7 @@ pub fn run() {
     let app_state = AppState::default();
     let system_service = SystemService::new();
     let file_service = FileService::new();
+    let recovery_service = RecoveryService::new();
     let security_service = SecurityService::new();
     let encryption_service = EncryptionService::new();
     let decryption_service = DecryptionService::new();
@@ -32,6 +36,7 @@ pub fn run() {
         .manage(app_state)
         .manage(system_service)
         .manage(file_service)
+        .manage(recovery_service)
         .manage(security_service)
         .manage(encryption_service)
         .manage(decryption_service)

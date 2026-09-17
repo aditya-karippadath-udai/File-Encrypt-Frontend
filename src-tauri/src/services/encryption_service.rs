@@ -101,7 +101,7 @@ impl EncryptionService {
         let argon2_params = Argon2ParamsConfig::default();
 
         info!("Deriving 256-bit key using Argon2id (64MB memory, 3 iterations, 4 threads)...");
-        let derived_key = derive_key_argon2id(&request.password, &salt, &argon2_params)?;
+        let derived_key = derive_key_argon2id(&request.password, salt.as_bytes(), Some(&argon2_params))?;
 
         // CRITICAL: request.password is dropped from scope here and not referenced again.
 
@@ -223,7 +223,7 @@ mod tests {
         let header = EncryptedFileHeader::read_from(&mut enc_file).expect("Failed to read header");
 
         // Derive key using password and salt from header
-        let key = derive_key_argon2id("SecureTestPassword123!", &header.salt, &header.argon2_params)
+        let key = derive_key_argon2id("SecureTestPassword123!", header.salt.as_bytes(), Some(&header.argon2_params))
             .expect("Key derivation");
 
         // Read chunk 1

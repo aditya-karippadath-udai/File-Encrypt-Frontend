@@ -71,7 +71,11 @@ impl OperationManager {
             ));
         }
 
-        let pw_validation = self.security_service.validate_password(&request.password);
+        let pw_req = PasswordValidationRequest {
+            password: request.password.clone(),
+            confirm_password: None,
+        };
+        let pw_validation = self.security_service.validate_password(&pw_req)?;
         if !pw_validation.is_valid {
             return Err(AppError::InvalidPassword(
                 pw_validation
