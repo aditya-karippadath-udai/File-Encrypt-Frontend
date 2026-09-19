@@ -5,8 +5,8 @@ use log::{info, warn};
 use crate::errors::AppError;
 use crate::models::decryption::{DecryptionOperationResult, StartDecryptionBatchRequest};
 use crate::models::{
-    EncryptionJob, EncryptionOperation, EncryptionOperationResult, OperationStatus,
-    OperationSummary, StartEncryptionBatchRequest,
+    EncryptionJob, EncryptionOperation, EncryptionOperationResult, OperationSummary,
+    PasswordValidationRequest, StartEncryptionBatchRequest,
 };
 use crate::operations::cancellation::CancellationRegistry;
 use crate::operations::decryption_scheduler::{
@@ -269,6 +269,7 @@ mod tests {
     use super::*;
     use std::io::Write;
     use tempfile::NamedTempFile;
+    use crate::models::OperationStatus;
 
     #[test]
     fn test_operation_manager_batch_flow() {

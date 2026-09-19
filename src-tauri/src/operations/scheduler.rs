@@ -9,8 +9,7 @@ use chrono::Utc;
 use log::{error, info, warn};
 
 use crate::crypto::{
-    derive_key_argon2id, encrypt_file_stream, Argon2ParamsConfig, DEFAULT_CHUNK_SIZE,
-    EncryptionProgressCallback, Salt,
+    derive_key_argon2id, encrypt_file_stream, Argon2ParamsConfig, DEFAULT_CHUNK_SIZE, Salt,
 };
 use crate::errors::AppError;
 use crate::models::{

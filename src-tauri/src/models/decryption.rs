@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::models::operation::{BatchJobStatus, BatchOperationStatus, JobResultItem};
+use crate::models::operation::{JobResult, JobStatus, OperationStatus};
 
 /// Single-file decryption request payload.
 /// Note: The password exists only in native memory for the duration of decryption and key derivation.
@@ -54,7 +54,7 @@ pub struct DecryptionJobProgressPayload {
     pub total_bytes: u64,
     pub percentage: f64,
     pub stage: String,
-    pub status: BatchJobStatus,
+    pub status: JobStatus,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub output_path: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -73,14 +73,14 @@ pub struct DecryptionProgressPayload {
     pub total_bytes: u64,
     pub processed_bytes: u64,
     pub percentage: f64,
-    pub status: BatchOperationStatus,
+    pub status: OperationStatus,
 }
 
 /// Final summary returned upon completion of a batch decryption operation.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DecryptionOperationResult {
     pub operation_id: String,
-    pub status: BatchOperationStatus,
+    pub status: OperationStatus,
     pub total_files: usize,
     pub successful_files: usize,
     pub failed_files: usize,
@@ -91,5 +91,5 @@ pub struct DecryptionOperationResult {
     pub duration_ms: u64,
     pub started_at: String,
     pub completed_at: String,
-    pub jobs: Vec<JobResultItem>,
+    pub jobs: Vec<JobResult>,
 }

@@ -5,9 +5,7 @@ use std::path::Path;
 use chacha20poly1305::aead::{Aead, KeyInit, Payload};
 use chacha20poly1305::{XChaCha20Poly1305, XNonce};
 
-use crate::crypto::format::{
-    EncryptedFileHeader, OriginalFileMetadata, DEFAULT_CHUNK_SIZE,
-};
+use crate::crypto::format::{EncryptedFileHeader, OriginalFileMetadata};
 use crate::crypto::key_derivation::{Argon2ParamsConfig, DerivedKey};
 use crate::crypto::nonce::{BaseNonce, METADATA_CHUNK_INDEX};
 use crate::crypto::random::Salt;
@@ -222,6 +220,7 @@ pub fn encrypt_file_stream(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::crypto::format::DEFAULT_CHUNK_SIZE;
     use std::io::Cursor;
     use tempfile::NamedTempFile;
 

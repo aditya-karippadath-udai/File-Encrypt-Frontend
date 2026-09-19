@@ -1,10 +1,8 @@
 use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
 
-use crate::errors::AppError;
 use crate::models::{
-    EncryptionJob, EncryptionOperation, JobStatus, JobSummary, OperationStatus,
-    OperationSummary, OperationType,
+    EncryptionJob, EncryptionOperation, JobStatus, JobSummary, OperationSummary, OperationType,
 };
 
 /// Thread-safe in-memory registry for tracking active operations and historical summaries in current session.

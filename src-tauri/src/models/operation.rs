@@ -462,6 +462,11 @@ pub struct OperationSummary {
     pub jobs: Vec<JobSummary>,
 }
 
+/// Backward compatibility aliases for operation model types
+pub type BatchOperationStatus = OperationStatus;
+pub type BatchJobStatus = JobStatus;
+pub type JobResultItem = JobResult;
+
 #[cfg(test)]
 mod tests {
     use super::*;

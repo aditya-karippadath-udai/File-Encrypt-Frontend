@@ -1,14 +1,14 @@
 use std::fs::File;
 use std::io::{BufReader, BufWriter, Read, Write};
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 use chacha20poly1305::aead::{Aead, KeyInit, Payload};
 use chacha20poly1305::{XChaCha20Poly1305, XNonce};
 use serde::{Deserialize, Serialize};
 
 use crate::crypto::format::{
-    EncryptedFileHeader, OriginalFileMetadata, ALGORITHM_XCHACHA20_POLY1305, CURRENT_FORMAT_VERSION,
-    KDF_ARGON2ID, MAGIC_BYTES, MAX_CHUNK_SIZE, MIN_CHUNK_SIZE, NONCE_STRATEGY_SEQUENTIAL,
+    EncryptedFileHeader, OriginalFileMetadata, ALGORITHM_XCHACHA20_POLY1305, KDF_ARGON2ID,
+    MAGIC_BYTES,
 };
 use crate::crypto::key_derivation::DerivedKey;
 use crate::crypto::nonce::{METADATA_CHUNK_INDEX, XCHACHA20_NONCE_LENGTH};

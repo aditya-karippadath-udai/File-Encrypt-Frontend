@@ -10,15 +10,14 @@ use log::{error, info, warn};
 
 use crate::crypto::{
     decrypt_file_stream, derive_key_argon2id, recover_authenticated_metadata,
-    DecryptionProgressCallback, EncryptedFileHeader, CURRENT_FORMAT_VERSION,
+    EncryptedFileHeader, CURRENT_FORMAT_VERSION,
 };
 use crate::errors::AppError;
 use crate::models::decryption::{
     DecryptionJobProgressPayload, DecryptionOperationResult, DecryptionProgressPayload,
 };
 use crate::models::operation::{
-    BatchJobStatus, BatchOperationStatus, EncryptionJob, EncryptionOperation, JobResultItem,
-    OperationType,
+    EncryptionJob, EncryptionOperation, JobResult, JobStatus, OperationStatus, OperationType,
 };
 use crate::operations::cancellation::CancellationRegistry;
 use crate::operations::registry::OperationRegistry;
@@ -114,7 +113,7 @@ impl DecryptionScheduler {
         }
 
         operation.started_at = Some(started_at_str.clone());
-        let _ = operation.status.transition_to(BatchOperationStatus::Running);
+        let _ = operation.status.transition_to(OperationStatus::Running);
         self.registry.insert_operation(operation.clone(), OperationType::Decrypt);
 
         // Emit initial operation status
@@ -128,7 +127,7 @@ impl DecryptionScheduler {
             total_bytes: operation.total_bytes,
             processed_bytes: 0,
             percentage: 0.0,
-            status: BatchOperationStatus::Running,
+            status: OperationStatus::Running,
         });
 
         let job_queue = Arc::new(Mutex::new(VecDeque::from(operation.jobs.clone())));
@@ -156,12 +155,12 @@ impl DecryptionScheduler {
                         info!("Worker {} noticed batch cancellation, draining remaining jobs", worker_idx);
                         while let Ok(mut q) = queue_clone.lock() {
                             if let Some(mut job) = q.pop_front() {
-                                let _ = job.status.transition_to(BatchJobStatus::Cancelled);
+                                let _ = job.status.transition_to(JobStatus::Cancelled);
                                 job.stage = "Cancelled".to_string();
                                 let jid = job.job_id.clone();
                                 let ip = job.input_path.clone();
                                 registry_clone.update_job(&op_id_clone, &jid, |j| {
-                                    let _ = j.status.transition_to(BatchJobStatus::Cancelled);
+                                    let _ = j.status.transition_to(JobStatus::Cancelled);
                                     j.stage = "Cancelled".to_string();
                                 });
                                 emitter_clone.emit_job_progress(&DecryptionJobProgressPayload {
@@ -172,7 +171,7 @@ impl DecryptionScheduler {
                                     total_bytes: job.total_bytes,
                                     percentage: 0.0,
                                     stage: "Cancelled".to_string(),
-                                    status: BatchJobStatus::Cancelled,
+                                    status: JobStatus::Cancelled,
                                     output_path: None,
                                     error: None,
                                 });
@@ -234,14 +233,14 @@ impl DecryptionScheduler {
         // Construct job results
         let mut job_results = Vec::with_capacity(final_op.jobs.len());
         for job in &final_op.jobs {
-            job_results.push(JobResultItem {
+            job_results.push(JobResult {
                 job_id: job.job_id.clone(),
                 input_path: job.input_path.clone(),
                 output_path: job.output_path.clone(),
                 output_name: job.output_name.clone(),
                 status: job.status,
                 original_size: job.total_bytes,
-                encrypted_size: if job.status == BatchJobStatus::Completed {
+                encrypted_size: if job.status == JobStatus::Completed {
                     job.output_path
                         .as_ref()
                         .and_then(|p| fs::metadata(p).ok().map(|m| m.len()))
@@ -314,10 +313,10 @@ impl DecryptionScheduler {
         // 1. Check cancellation before starting
         if cancellation.is_cancelled(operation_id, Some(&job_id)) {
             info!("Decryption job {} was cancelled before start", job_id);
-            let _ = job.status.transition_to(BatchJobStatus::Cancelled);
+            let _ = job.status.transition_to(JobStatus::Cancelled);
             job.stage = "Cancelled".to_string();
             registry.update_job(operation_id, &job_id, |j| {
-                let _ = j.status.transition_to(BatchJobStatus::Cancelled);
+                let _ = j.status.transition_to(JobStatus::Cancelled);
                 j.stage = "Cancelled".to_string();
             });
             emitter.emit_job_progress(&DecryptionJobProgressPayload {
@@ -328,7 +327,7 @@ impl DecryptionScheduler {
                 total_bytes: job.total_bytes,
                 percentage: 0.0,
                 stage: "Cancelled".to_string(),
-                status: BatchJobStatus::Cancelled,
+                status: JobStatus::Cancelled,
                 output_path: None,
                 error: None,
             });
@@ -337,10 +336,10 @@ impl DecryptionScheduler {
         }
 
         // 2. Stage: Preparing
-        let _ = job.status.transition_to(BatchJobStatus::Preparing);
+        let _ = job.status.transition_to(JobStatus::Preparing);
         job.stage = "Preparing".to_string();
         registry.update_job(operation_id, &job_id, |j| {
-            let _ = j.status.transition_to(BatchJobStatus::Preparing);
+            let _ = j.status.transition_to(JobStatus::Preparing);
             j.stage = "Preparing".to_string();
         });
         emitter.emit_job_progress(&DecryptionJobProgressPayload {
@@ -351,7 +350,7 @@ impl DecryptionScheduler {
             total_bytes: job.total_bytes,
             percentage: 0.0,
             stage: "Preparing".to_string(),
-            status: BatchJobStatus::Preparing,
+            status: JobStatus::Preparing,
             output_path: None,
             error: None,
         });
@@ -517,12 +516,12 @@ impl DecryptionScheduler {
         let temp_path = PathBuf::from(&temp_res.temp_path);
 
         // 7. Transition to Decrypting
-        let _ = job.status.transition_to(BatchJobStatus::Encrypting); // Uses active processing state
+        let _ = job.status.transition_to(JobStatus::Encrypting); // Uses active processing state
         job.stage = "Decrypting".to_string();
         job.output_path = Some(output_path_str.clone());
         job.output_name = Some(output_name.clone());
         registry.update_job(operation_id, &job_id, |j| {
-            let _ = j.status.transition_to(BatchJobStatus::Encrypting);
+            let _ = j.status.transition_to(JobStatus::Encrypting);
             j.stage = "Decrypting".to_string();
             j.output_path = Some(output_path_str.clone());
             j.output_name = Some(output_name.clone());
@@ -577,7 +576,7 @@ impl DecryptionScheduler {
                     total_bytes: total,
                     percentage,
                     stage: "Decrypting".to_string(),
-                    status: BatchJobStatus::Encrypting,
+                    status: JobStatus::Encrypting,
                     output_path: None,
                     error: None,
                 });
@@ -607,10 +606,10 @@ impl DecryptionScheduler {
 
         match stream_res {
             Ok((_bytes_read, decrypted_size)) => {
-                let _ = job.status.transition_to(BatchJobStatus::Finalizing);
+                let _ = job.status.transition_to(JobStatus::Finalizing);
                 job.stage = "Finalizing".to_string();
                 registry.update_job(operation_id, &job_id, |j| {
-                    let _ = j.status.transition_to(BatchJobStatus::Finalizing);
+                    let _ = j.status.transition_to(JobStatus::Finalizing);
                     j.stage = "Finalizing".to_string();
                 });
 
@@ -629,7 +628,7 @@ impl DecryptionScheduler {
                 }
 
                 let duration_ms = job_start.elapsed().as_millis() as u64;
-                let _ = job.status.transition_to(BatchJobStatus::Completed);
+                let _ = job.status.transition_to(JobStatus::Completed);
                 job.stage = "Completed".to_string();
                 job.processed_bytes = decrypted_size;
                 job.progress_percentage = 100.0;
@@ -637,7 +636,7 @@ impl DecryptionScheduler {
                 job.completed_at = Some(Utc::now().to_rfc3339());
 
                 registry.update_job(operation_id, &job_id, |j| {
-                    let _ = j.status.transition_to(BatchJobStatus::Completed);
+                    let _ = j.status.transition_to(JobStatus::Completed);
                     j.stage = "Completed".to_string();
                     j.processed_bytes = decrypted_size;
                     j.progress_percentage = 100.0;
@@ -653,7 +652,7 @@ impl DecryptionScheduler {
                     total_bytes,
                     percentage: 100.0,
                     stage: "Completed".to_string(),
-                    status: BatchJobStatus::Completed,
+                    status: JobStatus::Completed,
                     output_path: Some(output_path_str),
                     error: None,
                 });
@@ -664,10 +663,10 @@ impl DecryptionScheduler {
                 warn!("Job {} was cancelled during decryption streaming", job_id);
                 let _ = cleanup_temp_file_path(&temp_path);
 
-                let _ = job.status.transition_to(BatchJobStatus::Cancelled);
+                let _ = job.status.transition_to(JobStatus::Cancelled);
                 job.stage = "Cancelled".to_string();
                 registry.update_job(operation_id, &job_id, |j| {
-                    let _ = j.status.transition_to(BatchJobStatus::Cancelled);
+                    let _ = j.status.transition_to(JobStatus::Cancelled);
                     j.stage = "Cancelled".to_string();
                 });
 
@@ -679,7 +678,7 @@ impl DecryptionScheduler {
                     total_bytes,
                     percentage: 0.0,
                     stage: "Cancelled".to_string(),
-                    status: BatchJobStatus::Cancelled,
+                    status: JobStatus::Cancelled,
                     output_path: None,
                     error: None,
                 });
@@ -712,7 +711,7 @@ impl DecryptionScheduler {
         emitter: &Arc<dyn DecryptionEventEmitter>,
     ) {
         registry.update_job(operation_id, job_id, |j| {
-            let _ = j.status.transition_to(BatchJobStatus::Failed);
+            let _ = j.status.transition_to(JobStatus::Failed);
             j.stage = "Failed".to_string();
             j.error = Some(error_msg.to_string());
             j.completed_at = Some(Utc::now().to_rfc3339());
@@ -726,7 +725,7 @@ impl DecryptionScheduler {
             total_bytes,
             percentage: 0.0,
             stage: "Failed".to_string(),
-            status: BatchJobStatus::Failed,
+            status: JobStatus::Failed,
             output_path: None,
             error: Some(error_msg.to_string()),
         });

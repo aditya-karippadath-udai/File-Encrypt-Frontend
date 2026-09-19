@@ -15,8 +15,9 @@ pub use file::{
     OutputConflictStatus, TempFileResult,
 };
 pub use operation::{
-    BatchProgressEvent, EncryptionJob, EncryptionOperation, EncryptionOperationResult,
-    JobProgressEvent, JobResult, JobStatus, OperationStatus, StartEncryptionBatchRequest,
+    BatchJobStatus, BatchOperationStatus, BatchProgressEvent, EncryptionJob, EncryptionOperation,
+    EncryptionOperationResult, JobProgressEvent, JobResult, JobResultItem, JobStatus, JobSummary,
+    OperationStatus, OperationSummary, OperationType, StartEncryptionBatchRequest,
 };
 pub use responses::{AppInfoResponse, HealthCheckResponse};
 pub use security::{
