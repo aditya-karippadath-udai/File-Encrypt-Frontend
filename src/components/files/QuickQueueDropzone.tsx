@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   UploadCloud,
   Zap,
@@ -13,6 +13,8 @@ import { fileService } from '../../services/files';
 import { generateId } from '../../utils/formatters';
 import { Button } from '../ui/Button';
 import { cn } from '../../utils/cn';
+import { isTauri } from '../../services/platform/environment';
+import { useToastStore } from '../../stores/useToastStore';
 
 export interface QuickQueueDropzoneProps {
   onFilesSelected: (files: FileItem[]) => void;
@@ -42,6 +44,92 @@ export const QuickQueueDropzone: React.FC<QuickQueueDropzoneProps> = ({
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const processNativePaths = useCallback(
+    async (paths: string[]) => {
+      if (!paths || paths.length === 0) return;
+      try {
+        const resolved = await fileService.resolveDroppedPaths(paths);
+        const validItems: FileItem[] = resolved
+          .filter((r) => r.valid && r.metadata)
+          .map((r) => {
+            const meta = r.metadata!;
+            const isEnc =
+              meta.name.endsWith('.enc') ||
+              meta.name.endsWith('.aegis') ||
+              meta.name.endsWith('.vault') ||
+              meta.isEncrypted;
+            return {
+              id: generateId('file'),
+              name: meta.name,
+              size: meta.sizeBytes,
+              type: 'application/octet-stream',
+              path: meta.path,
+              lastModified: meta.modifiedAt ? new Date(meta.modifiedAt).getTime() : Date.now(),
+              isEncrypted: isEnc,
+              validationStatus: 'ready',
+            };
+          });
+
+        if (validItems.length > 0) {
+          const filtered = encryptedOnly ? validItems.filter((i) => i.isEncrypted) : validItems;
+          if (filtered.length > 0) {
+            if (activePassword && isPasswordValid && onQuickEnqueueDirect) {
+              onQuickEnqueueDirect(filtered);
+            } else {
+              onFilesSelected(filtered);
+            }
+          }
+        }
+      } catch (err) {
+        console.error('Failed to resolve dropped native paths in QuickQueueDropzone:', err);
+      }
+    },
+    [activePassword, encryptedOnly, isPasswordValid, onFilesSelected, onQuickEnqueueDirect]
+  );
+
+  useEffect(() => {
+    if (!isTauri()) return;
+
+    let unlisten: (() => void) | null = null;
+    let isMounted = true;
+
+    const setupListener = async () => {
+      try {
+        const { getCurrentWebview } = await import('@tauri-apps/api/webview');
+        const webview = getCurrentWebview();
+        const unlistenFn = await webview.onDragDropEvent(async (event) => {
+          if (!isMounted) return;
+          if (event.payload.type === 'enter' || event.payload.type === 'over') {
+            setIsDragging(true);
+          } else if (event.payload.type === 'leave') {
+            setIsDragging(false);
+          } else if (event.payload.type === 'drop') {
+            setIsDragging(false);
+            if (event.payload.paths && event.payload.paths.length > 0) {
+              await processNativePaths(event.payload.paths);
+            }
+          }
+        });
+        if (isMounted) {
+          unlisten = unlistenFn;
+        } else {
+          unlistenFn();
+        }
+      } catch (err) {
+        console.warn('Could not register Tauri native drag-drop listener in QuickQueue:', err);
+      }
+    };
+
+    setupListener();
+
+    return () => {
+      isMounted = false;
+      if (unlisten) {
+        unlisten();
+      }
+    };
+  }, [processNativePaths]);
+
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -60,48 +148,24 @@ export const QuickQueueDropzone: React.FC<QuickQueueDropzoneProps> = ({
     // Check if native paths are available (Tauri drag & drop)
     const nativePaths: string[] = [];
     Array.from(fileList).forEach((file: any) => {
-      if (file.path) {
+      if (file.path && typeof file.path === 'string' && file.path.length > 0) {
         nativePaths.push(file.path);
       }
     });
 
     if (nativePaths.length > 0) {
-      try {
-        const resolved = await fileService.resolveDroppedPaths(nativePaths);
-        const validItems: FileItem[] = resolved
-          .filter((r) => r.valid && r.metadata)
-          .map((r) => {
-            const meta = r.metadata!;
-            const isEnc =
-              meta.name.endsWith('.enc') ||
-              meta.name.endsWith('.aegis') ||
-              meta.name.endsWith('.vault') ||
-              meta.isEncrypted;
-            return {
-              id: generateId('file'),
-              name: meta.name,
-              size: meta.sizeBytes,
-              type: 'application/octet-stream',
-              path: meta.path,
-              lastModified: meta.modifiedAt ? new Date(meta.modifiedAt).getTime() : Date.now(),
-              isEncrypted: isEnc,
-            };
-          });
+      await processNativePaths(nativePaths);
+      return;
+    }
 
-        if (validItems.length > 0) {
-          const filtered = encryptedOnly ? validItems.filter((i) => i.isEncrypted) : validItems;
-          if (filtered.length > 0) {
-            if (activePassword && isPasswordValid && onQuickEnqueueDirect) {
-              onQuickEnqueueDirect(filtered);
-            } else {
-              onFilesSelected(filtered);
-            }
-            return;
-          }
-        }
-      } catch {
-        // Fallback to standard FileList extraction
-      }
+    if (isTauri()) {
+      useToastStore.getState().addToast({
+        type: 'warning',
+        title: 'Native File Path Required',
+        message:
+          'Absolute path unavailable from browser drop event. Please click "Browse Files" to choose files directly.',
+      });
+      return;
     }
 
     const items: FileItem[] = Array.from(fileList).map((file) => {

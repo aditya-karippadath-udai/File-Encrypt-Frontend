@@ -92,11 +92,15 @@ pub fn encrypt_file_stream(
     is_cancelled: Option<CancellationCheck>,
 ) -> Result<(u64, u64), AppError> {
     let input_file = File::open(input_path).map_err(|e| {
-        AppError::FileAccessDenied(format!(
-            "Failed to open source file for reading: {}",
-            e
-        ))
+        if e.kind() == std::io::ErrorKind::NotFound {
+            AppError::FileNotFound(format!("Input file does not exist: {}", input_path.display()))
+        } else if e.kind() == std::io::ErrorKind::PermissionDenied {
+            AppError::FileAccessDenied(format!("Permission denied opening input file: {}", input_path.display()))
+        } else {
+            AppError::FileAccessDenied(format!("Failed to open source file for reading: {}", e))
+        }
     })?;
+    log::info!("Input file opened successfully for reading: {}", input_path.display());
 
     let total_file_size = input_file
         .metadata()
@@ -105,10 +109,12 @@ pub fn encrypt_file_stream(
 
     let output_file = File::create(output_temp_path).map_err(|e| {
         AppError::OutputWriteFailed(format!(
-            "Failed to create temporary output file: {}",
+            "Failed to create temporary output file {}: {}",
+            output_temp_path.display(),
             e
         ))
     })?;
+    log::info!("Output temporary file created successfully for writing: {}", output_temp_path.display());
 
     let mut reader = BufReader::with_capacity(chunk_size as usize, input_file);
     let mut writer = BufWriter::with_capacity(chunk_size as usize + 4096, output_file);
@@ -150,8 +156,13 @@ pub fn encrypt_file_stream(
     )?;
     let header_bytes_written = header.write_to(&mut writer)?;
     let mut total_output_bytes = header_bytes_written as u64;
+    log::info!("Encryption header written successfully ({} bytes)", header_bytes_written);
 
     // 5. Streaming Chunk Encryption Loop
+    log::info!(
+        "Processing chunks (chunk_size: {} bytes, total_file_size: {} bytes)",
+        chunk_size, total_file_size
+    );
     let mut read_buffer = vec![0u8; chunk_size as usize];
     let mut chunk_index: u64 = 1;
     let mut total_bytes_read: u64 = 0;
@@ -213,6 +224,7 @@ pub fn encrypt_file_stream(
     writer.flush().map_err(|e| {
         AppError::OutputWriteFailed(format!("Failed to flush output stream: {}", e))
     })?;
+    log::info!("Final chunk and Poly1305 authentication tag written and flushed successfully");
 
     Ok((total_bytes_read, total_output_bytes))
 }

@@ -58,6 +58,21 @@ export const useQueueStore = create<QueueState>((set, get) => ({
         ? (file.name.endsWith('.enc') ? file.name : `${file.name}.enc`)
         : (file.name.endsWith('.enc') ? file.name.slice(0, -4) : `decrypted_${file.name}`);
 
+      let computedOutputPath: string | undefined = undefined;
+      if (
+        settings.outputBehavior === 'custom-folder' &&
+        settings.customOutputPath &&
+        !settings.customOutputPath.startsWith('~')
+      ) {
+        computedOutputPath = `${settings.customOutputPath}/${outputName}`;
+      } else if (file.path && (file.path.includes('/') || file.path.includes('\\'))) {
+        const lastSlash = Math.max(file.path.lastIndexOf('/'), file.path.lastIndexOf('\\'));
+        if (lastSlash !== -1) {
+          const dir = file.path.substring(0, lastSlash);
+          computedOutputPath = `${dir}/${outputName}`;
+        }
+      }
+
       return {
         id: generateId('op'),
         file,
@@ -70,7 +85,7 @@ export const useQueueStore = create<QueueState>((set, get) => ({
         },
         algorithm: settings.algorithm,
         keyDerivation: settings.keyDerivation,
-        outputPath: `${settings.customOutputPath}/${outputName}`,
+        outputPath: computedOutputPath,
         outputName,
       };
     });

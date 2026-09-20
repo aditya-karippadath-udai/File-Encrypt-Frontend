@@ -1,3 +1,4 @@
+use log::{error, info};
 use tauri::{AppHandle, State};
 
 use crate::errors::AppError;
@@ -17,7 +18,17 @@ pub async fn encrypt_file(
     encryption_service: State<'_, EncryptionService>,
     request: EncryptionRequest,
 ) -> Result<EncryptionResult, AppError> {
-    encryption_service.encrypt_file(request, None, None)
+    info!("Command invoke: encrypt_file for input_path: '{}'", request.input_path);
+    match encryption_service.encrypt_file(request, None, None) {
+        Ok(result) => {
+            info!("Command encrypt_file completed successfully for: '{}'", result.output_path);
+            Ok(result)
+        }
+        Err(err) => {
+            error!("Command encrypt_file failed: {:?}", err);
+            Err(err)
+        }
+    }
 }
 
 /// Starts a batch encryption operation over multiple files with controlled concurrency and streaming progress.
@@ -27,6 +38,7 @@ pub async fn start_encryption_batch(
     operation_manager: State<'_, OperationManager>,
     request: StartEncryptionBatchRequest,
 ) -> Result<EncryptionOperationResult, AppError> {
+    info!("Command invoke: start_encryption_batch with {} files", request.files.len());
     operation_manager.start_batch(Some(&app_handle), request)
 }
 

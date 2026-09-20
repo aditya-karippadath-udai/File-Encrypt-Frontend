@@ -39,19 +39,76 @@ impl EncryptionService {
         is_cancelled: Option<CancellationCheck>,
     ) -> Result<EncryptionResult, AppError> {
         let start_time = Instant::now();
-        info!("Initiating file encryption for input path: {}", request.input_path);
+        let op_id = format!("enc-{}", &uuid::Uuid::new_v4().simple().to_string()[..8]);
+
+        info!(
+            "[{}] Starting encryption operation. Input: '{}', Output requested: {:?}, Overwrite: {:?}",
+            op_id, request.input_path, request.output_path, request.overwrite
+        );
 
         // 1. Validate Password
         if request.password.is_empty() {
-            return Err(AppError::PasswordRequired(
-                "Password cannot be empty for encryption".to_string(),
-            ));
+            let err = AppError::PasswordRequired("Password cannot be empty for encryption".to_string());
+            error!("[{}] Encryption parameter error: {:?}", op_id, err);
+            return Err(err);
         }
 
-        // 2. Validate Source File
+        // 2. Validate Source File Path & Existence
         let input_path = Path::new(&request.input_path);
-        let input_metadata = self.file_service.get_file_metadata(&request.input_path)?;
+        if !input_path.exists() {
+            let err = AppError::FileNotFound(format!(
+                "Input file does not exist: {}",
+                input_path.display()
+            ));
+            error!("[{}] Input path validation failed: {:?}", op_id, err);
+            return Err(err);
+        }
+
+        if !input_path.is_file() {
+            let err = AppError::NotAFile(format!(
+                "Input path is not a file: {}",
+                input_path.display()
+            ));
+            error!("[{}] Input path validation failed: {:?}", op_id, err);
+            return Err(err);
+        }
+
+        // Verify that the file can be opened for reading
+        match fs::File::open(input_path) {
+            Ok(_) => {
+                info!("[{}] Input file opened successfully for verification: {}", op_id, input_path.display());
+            }
+            Err(e) => {
+                let err = if e.kind() == std::io::ErrorKind::PermissionDenied {
+                    AppError::FileAccessDenied(format!(
+                        "Permission denied accessing input file: {}",
+                        input_path.display()
+                    ))
+                } else {
+                    AppError::FileAccessDenied(format!(
+                        "Unable to open input file {}: {}",
+                        input_path.display(),
+                        e
+                    ))
+                };
+                error!("[{}] Failed to open input file for verification: {:?}", op_id, err);
+                return Err(err);
+            }
+        }
+
+        let input_metadata = match self.file_service.get_file_metadata(&request.input_path) {
+            Ok(m) => m,
+            Err(e) => {
+                error!("[{}] Failed to get file metadata: {:?}", op_id, e);
+                return Err(e);
+            }
+        };
         let original_size = input_metadata.size_bytes;
+
+        info!(
+            "[{}] Input file validated successfully: '{}' ({} bytes). Encryption mode: XChaCha20-Poly1305 with Argon2id",
+            op_id, input_metadata.name, original_size
+        );
 
         // 3. Determine Final Output Path
         let final_output_path: PathBuf = if let Some(ref out_p) = request.output_path {
@@ -62,51 +119,90 @@ impl EncryptionService {
         };
 
         let output_path_str = final_output_path.to_string_lossy().to_string();
+        info!("[{}] Final output destination path: {}", op_id, output_path_str);
 
         // 4. Validate Output Conflicts
-        let conflict = self.file_service.check_output_conflict(&request.input_path, &output_path_str)?;
+        let conflict = match self.file_service.check_output_conflict(&request.input_path, &output_path_str) {
+            Ok(c) => c,
+            Err(e) => {
+                error!("[{}] Conflict check failed: {:?}", op_id, e);
+                return Err(e);
+            }
+        };
+
         match conflict.status {
             OutputConflictStatus::SameAsInput => {
-                return Err(AppError::OutputConflict(
+                let err = AppError::OutputConflict(
                     "Output path cannot be identical to the source file".to_string(),
-                ));
+                );
+                error!("[{}] Output conflict: {:?}", op_id, err);
+                return Err(err);
             }
             OutputConflictStatus::ParentDirectoryMissing => {
-                return Err(AppError::InvalidOutputDirectory(
+                let err = AppError::InvalidOutputDirectory(
                     "Destination directory does not exist".to_string(),
-                ));
+                );
+                error!("[{}] Output conflict: {:?}", op_id, err);
+                return Err(err);
             }
             OutputConflictStatus::InvalidOutput => {
-                return Err(AppError::InvalidPath("Invalid destination path specified".to_string()));
+                let err = AppError::InvalidPath("Invalid destination path specified".to_string());
+                error!("[{}] Output conflict: {:?}", op_id, err);
+                return Err(err);
             }
             OutputConflictStatus::OutputExists => {
                 if request.overwrite != Some(true) {
-                    return Err(AppError::OutputConflict(format!(
+                    let err = AppError::OutputConflict(format!(
                         "Destination file already exists: {}",
                         output_path_str
-                    )));
+                    ));
+                    error!("[{}] Output conflict (overwrite disabled): {:?}", op_id, err);
+                    return Err(err);
                 }
-                info!("Destination file exists but overwrite is enabled: {}", output_path_str);
+                info!("[{}] Destination file exists but overwrite is enabled: {}", op_id, output_path_str);
             }
             OutputConflictStatus::NoConflict => {}
         }
 
         // 5. Prepare Temporary Output Path
-        let temp_res = prepare_temp_output_path(&final_output_path)?;
+        let temp_res = match prepare_temp_output_path(&final_output_path) {
+            Ok(t) => t,
+            Err(e) => {
+                error!("[{}] Failed to create temporary output path: {:?}", op_id, e);
+                return Err(e);
+            }
+        };
         let temp_path = PathBuf::from(&temp_res.temp_path);
-        info!("Created temporary output path: {}", temp_res.temp_path);
+        info!("[{}] Temporary output path prepared: {}", op_id, temp_res.temp_path);
 
         // 6. Generate Cryptographic Salt & Derive Key
-        let salt = Salt::generate()?;
+        let salt = match Salt::generate() {
+            Ok(s) => s,
+            Err(e) => {
+                error!("[{}] Salt generation failed: {:?}", op_id, e);
+                let _ = cleanup_temp_file_path(&temp_path);
+                return Err(e);
+            }
+        };
         let argon2_params = Argon2ParamsConfig::default();
 
-        info!("Deriving 256-bit key using Argon2id (64MB memory, 3 iterations, 4 threads)...");
-        let derived_key = derive_key_argon2id(&request.password, salt.as_bytes(), Some(&argon2_params))?;
+        info!("[{}] Key derivation started: deriving 256-bit key using Argon2id (64MB memory, 3 iterations, 4 threads)...", op_id);
+        let derived_key = match derive_key_argon2id(&request.password, salt.as_bytes(), Some(&argon2_params)) {
+            Ok(k) => {
+                info!("[{}] Key derivation succeeded.", op_id);
+                k
+            }
+            Err(e) => {
+                error!("[{}] Key derivation failed: {:?}", op_id, e);
+                let _ = cleanup_temp_file_path(&temp_path);
+                return Err(e);
+            }
+        };
 
         // CRITICAL: request.password is dropped from scope here and not referenced again.
 
         // 7. Stream and Encrypt to Temporary Output File
-        info!("Streaming file encryption to temporary target...");
+        info!("[{}] Streaming file encryption to temporary target...", op_id);
         let stream_result = encrypt_file_stream(
             input_path,
             &temp_path,
@@ -120,22 +216,27 @@ impl EncryptionService {
 
         // Handle Stream Result and Cleanup on Error
         let (_bytes_read, encrypted_size) = match stream_result {
-            Ok(res) => res,
+            Ok(res) => {
+                info!("[{}] Chunks processed successfully ({} bytes written to temp file)", op_id, res.1);
+                res
+            }
             Err(err) => {
-                error!("Streaming encryption encountered error, cleaning temporary file: {:?}", err);
+                error!("[{}] Streaming encryption encountered error, cleaning temporary file: {:?}", op_id, err);
                 let _ = cleanup_temp_file_path(&temp_path);
                 return Err(err);
             }
         };
 
         // 8. Safely Finalize & Move Temporary File to Final Destination
-        info!("Finalizing output: moving temporary file to destination: {}", output_path_str);
+        info!("[{}] Finalizing output: moving temporary file to destination: {}", op_id, output_path_str);
         if let Err(e) = Self::atomic_finalize_file(&temp_path, &final_output_path) {
             let _ = cleanup_temp_file_path(&temp_path);
-            return Err(AppError::FinalizationFailed(format!(
+            let err = AppError::FinalizationFailed(format!(
                 "Failed to finalize output file {}: {}",
                 output_path_str, e
-            )));
+            ));
+            error!("[{}] Finalization error: {:?}", op_id, err);
+            return Err(err);
         }
 
         let duration_ms = start_time.elapsed().as_millis() as u64;
@@ -146,8 +247,8 @@ impl EncryptionService {
             .to_string();
 
         info!(
-            "Encryption completed successfully for {} -> {} in {}ms ({} bytes -> {} bytes)",
-            input_metadata.name, output_name, duration_ms, original_size, encrypted_size
+            "[{}] Final operation status: COMPLETED successfully for {} -> {} in {}ms ({} bytes -> {} bytes)",
+            op_id, input_metadata.name, output_name, duration_ms, original_size, encrypted_size
         );
 
         Ok(EncryptionResult {
