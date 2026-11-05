@@ -34,6 +34,15 @@
 - [Installation Guide](#-installation-guide)
   - [Pre-Built Binaries](#pre-built-binaries)
   - [Building from Source](#building-from-source)
+- [🐧 Debian / Ubuntu (.deb) Package Guide](#-debian--ubuntu-deb-package-guide)
+  - [1. System Prerequisites](#1-system-prerequisites)
+  - [2. Building the .deb Package](#2-building-the-deb-package)
+  - [3. Installing the .deb Package](#3-installing-the-deb-package)
+  - [4. Verifying & Launching](#4-verifying--launching)
+  - [5. Updating to a Newer Version](#5-updating-to-a-newer-version)
+  - [6. Uninstalling & Deleting the Package](#6-uninstalling--deleting-the-package)
+  - [7. Complete Purge & Data Cleanup](#7-complete-purge--data-cleanup)
+  - [8. Deleting Build Artifacts](#8-deleting-build-artifacts)
 - [Usage Guide](#-usage-guide)
   - [1. Encrypting Files](#1-encrypting-files)
   - [2. Decrypting Files](#2-decrypting-files)
@@ -298,6 +307,260 @@ npm run tauri build
 ```
 
 Compiled desktop packages are written to `src-tauri/target/release/bundle/`.
+
+---
+
+## 🐧 Debian / Ubuntu (.deb) Package Guide
+
+This section provides comprehensive instructions for packaging **Aegis File Encryption Tool** as a native Debian/Ubuntu package (`.deb`), installing it, verifying the installation, upgrading, and completely uninstalling or deleting it and its associated files.
+
+### 1. System Prerequisites
+
+Before building the `.deb` package on Ubuntu, Debian, Linux Mint, Pop!_OS, or any Debian-based distribution, ensure all required build toolchains and development libraries are installed:
+
+```bash
+# 1. Update package lists
+sudo apt-get update
+
+# 2. Install essential compilers, development headers, and WebKitGTK libraries
+sudo apt-get install -y \
+  build-essential \
+  curl \
+  wget \
+  file \
+  pkg-config \
+  libssl-dev \
+  libgtk-3-dev \
+  libwebkit2gtk-4.1-dev \
+  libayatana-appindicator3-dev \
+  librsvg2-dev
+```
+
+> **Note for older distributions (e.g. Ubuntu 20.04 LTS or Debian 11)**:
+> If `libwebkit2gtk-4.1-dev` is unavailable in your distribution repositories, substitute with `libwebkit2gtk-4.0-dev`:
+> ```bash
+> sudo apt-get install -y libwebkit2gtk-4.0-dev
+> ```
+
+Verify that your Node.js (≥ 18.0) and Rust (≥ 1.77) toolchains are active:
+```bash
+node -v
+npm -v
+rustc --version
+cargo --version
+```
+
+---
+
+### 2. Building the .deb Package
+
+Aegis uses Tauri v2's bundler to produce optimized standalone Debian packages.
+
+#### Standard Build (Fast & Direct)
+
+Run the following commands from the root directory of the repository:
+
+```bash
+# 1. Install frontend JavaScript dependencies
+npm install
+
+# 2. Build the production React / TypeScript frontend
+npm run build
+
+# 3. Build only the .deb bundle
+npm run tauri build -- --bundles deb
+```
+
+Alternatively, you can run the Tauri CLI directly via `npx`:
+```bash
+npx tauri build --bundles deb
+```
+
+#### Clean Build (Recommended when changing configurations or upgrading dependencies)
+
+If you have previously built binaries and want to ensure a pristine release:
+```bash
+# Clean previous builds
+npm run clean
+cd src-tauri && cargo clean && cd ..
+
+# Rebuild the .deb package
+npm run build
+npm run tauri build -- --bundles deb
+```
+
+#### Locating the Generated .deb Package
+
+Once compilation and packaging finish, Tauri writes the `.deb` installer to:
+```
+src-tauri/target/release/bundle/deb/
+```
+
+The generated file follows the standard Debian package naming convention:
+```
+src-tauri/target/release/bundle/deb/file-encryption-tool_1.0.0_amd64.deb
+```
+*(On ARM64 / Raspberry Pi / Apple Silicon Linux VMs, the file will end in `_arm64.deb`)*.
+
+You can inspect the newly built package file and its size:
+```bash
+ls -lh src-tauri/target/release/bundle/deb/*.deb
+```
+
+---
+
+### 3. Installing the .deb Package
+
+You have three convenient methods to install the `.deb` package on your system:
+
+#### Method A: Using `apt install` (Recommended)
+`apt install` automatically detects and installs any missing shared runtime libraries (such as `libwebkit2gtk-4.1-0`) directly from official repositories:
+
+```bash
+# Note: You MUST provide the relative './' or full path to apt
+sudo apt update
+sudo apt install ./src-tauri/target/release/bundle/deb/file-encryption-tool_1.0.0_amd64.deb
+```
+
+#### Method B: Using `dpkg` with Dependency Fixup
+If you prefer traditional `dpkg`:
+
+```bash
+# Install package
+sudo dpkg -i src-tauri/target/release/bundle/deb/file-encryption-tool_1.0.0_amd64.deb
+
+# If dpkg complains about missing runtime dependencies, resolve them automatically:
+sudo apt-get install -f -y
+```
+
+#### Method C: Using `gdebi` (Lightweight Graphical/CLI Package Installer)
+`gdebi` inspects the `.deb` package and fetches dependencies in one command:
+
+```bash
+# Install gdebi if not already present
+sudo apt install -y gdebi-core
+
+# Install Aegis via gdebi
+sudo gdebi src-tauri/target/release/bundle/deb/file-encryption-tool_1.0.0_amd64.deb
+```
+
+---
+
+### 4. Verifying & Launching
+
+#### Verify Installation
+
+Check that the package has been registered with the Debian package management database:
+```bash
+# Check package status and installed version
+dpkg -s file-encryption-tool
+```
+
+List all files and paths installed by the package:
+```bash
+dpkg -L file-encryption-tool
+```
+
+Key installed assets include:
+| Path | Purpose |
+| :--- | :--- |
+| `/usr/bin/file-encryption-tool` | Native executable binary |
+| `/usr/share/applications/file-encryption-tool.desktop` | Desktop application launcher entry |
+| `/usr/share/icons/hicolor/...` | App launcher icons at multiple resolutions |
+
+#### Launching the Application
+
+- **From Desktop Application Menu**:
+  Press `Super` (Windows key) or open your application drawer, search for **"File Encryption Tool"** or **"Aegis"**, and click the shield icon.
+
+- **From Terminal**:
+  ```bash
+  # Foreground execution
+  file-encryption-tool
+
+  # Or run in background decoupled from terminal
+  file-encryption-tool > /dev/null 2>&1 &
+  ```
+
+---
+
+### 5. Updating to a Newer Version
+
+When a new version of Aegis is built or released:
+```bash
+# Simply install the new .deb file over the existing installation:
+sudo apt install --reinstall ./src-tauri/target/release/bundle/deb/file-encryption-tool_1.0.1_amd64.deb
+```
+Your user settings and custom output paths are automatically preserved across updates.
+
+---
+
+### 6. Uninstalling & Deleting the Package
+
+Depending on whether you wish to keep or delete configuration files, select the appropriate option:
+
+#### Option 1: Standard Uninstall (Preserves User Configurations)
+Removes the application binary, desktop shortcut, and system icons while keeping your application settings:
+
+```bash
+# Using apt:
+sudo apt remove file-encryption-tool
+
+# Or using dpkg:
+sudo dpkg -r file-encryption-tool
+```
+
+#### Option 2: Complete Purge (Removes Package and System Configuration)
+Removes all system files associated with the package:
+
+```bash
+# Using apt:
+sudo apt purge file-encryption-tool
+
+# Or using dpkg:
+sudo dpkg -P file-encryption-tool
+```
+
+#### Option 3: Clean up Orphaned Dependencies
+After uninstalling, remove any system libraries that were installed exclusively as dependencies for Aegis and are no longer required by any other program:
+
+```bash
+sudo apt autoremove --purge -y
+```
+
+---
+
+### 7. Complete Purge & Data Cleanup
+
+If you want a 100% clean system removal with zero leftover state or cached data, remove the user application data directory:
+
+```bash
+# Remove local application state, cache, and settings
+rm -rf ~/.config/com.aegis.fileencryption
+rm -rf ~/.local/share/com.aegis.fileencryption
+rm -rf ~/.cache/com.aegis.fileencryption
+
+# Clean up any leftover temporary staging files in /tmp if applicable
+rm -f /tmp/.aegis_tmp_*
+```
+
+---
+
+### 8. Deleting Build Artifacts
+
+To reclaim disk space by deleting the generated `.deb` file and intermediate build objects:
+
+```bash
+# Delete only the generated .deb packages:
+rm -f src-tauri/target/release/bundle/deb/*.deb
+
+# Delete all generated packaging bundles (deb, AppImage, etc.):
+rm -rf src-tauri/target/release/bundle/
+
+# Full deep clean (frees several gigabytes of Rust compiler cache):
+cd src-tauri && cargo clean && cd ..
+npm run clean
+```
 
 ---
 
