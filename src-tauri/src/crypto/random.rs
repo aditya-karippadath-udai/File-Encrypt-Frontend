@@ -54,7 +54,10 @@ impl Salt {
         let mut bytes = vec![0u8; length];
         let mut rng = OsRng;
         rng.try_fill_bytes(&mut bytes).map_err(|e| {
-            AppError::RandomGenerationFailed(format!("Failed to generate secure random salt: {}", e))
+            AppError::RandomGenerationFailed(format!(
+                "Failed to generate secure random salt: {}",
+                e
+            ))
         })?;
 
         Ok(Self { bytes })

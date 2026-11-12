@@ -1,11 +1,11 @@
+use log::{error, info};
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::time::Instant;
-use log::{error, info};
 
 use crate::crypto::{
     derive_key_argon2id, encrypt_file_stream, Argon2ParamsConfig, CancellationCheck,
-    DEFAULT_CHUNK_SIZE, EncryptionProgressCallback, Salt,
+    EncryptionProgressCallback, Salt, DEFAULT_CHUNK_SIZE,
 };
 use crate::errors::AppError;
 use crate::models::{EncryptionRequest, EncryptionResult, OutputConflictStatus};
@@ -48,7 +48,8 @@ impl EncryptionService {
 
         // 1. Validate Password
         if request.password.is_empty() {
-            let err = AppError::PasswordRequired("Password cannot be empty for encryption".to_string());
+            let err =
+                AppError::PasswordRequired("Password cannot be empty for encryption".to_string());
             error!("[{}] Encryption parameter error: {:?}", op_id, err);
             return Err(err);
         }
@@ -76,7 +77,11 @@ impl EncryptionService {
         // Verify that the file can be opened for reading
         match fs::File::open(input_path) {
             Ok(_) => {
-                info!("[{}] Input file opened successfully for verification: {}", op_id, input_path.display());
+                info!(
+                    "[{}] Input file opened successfully for verification: {}",
+                    op_id,
+                    input_path.display()
+                );
             }
             Err(e) => {
                 let err = if e.kind() == std::io::ErrorKind::PermissionDenied {
@@ -91,7 +96,10 @@ impl EncryptionService {
                         e
                     ))
                 };
-                error!("[{}] Failed to open input file for verification: {:?}", op_id, err);
+                error!(
+                    "[{}] Failed to open input file for verification: {:?}",
+                    op_id, err
+                );
                 return Err(err);
             }
         }
@@ -119,10 +127,16 @@ impl EncryptionService {
         };
 
         let output_path_str = final_output_path.to_string_lossy().to_string();
-        info!("[{}] Final output destination path: {}", op_id, output_path_str);
+        info!(
+            "[{}] Final output destination path: {}",
+            op_id, output_path_str
+        );
 
         // 4. Validate Output Conflicts
-        let conflict = match self.file_service.check_output_conflict(&request.input_path, &output_path_str) {
+        let conflict = match self
+            .file_service
+            .check_output_conflict(&request.input_path, &output_path_str)
+        {
             Ok(c) => c,
             Err(e) => {
                 error!("[{}] Conflict check failed: {:?}", op_id, e);
@@ -156,10 +170,16 @@ impl EncryptionService {
                         "Destination file already exists: {}",
                         output_path_str
                     ));
-                    error!("[{}] Output conflict (overwrite disabled): {:?}", op_id, err);
+                    error!(
+                        "[{}] Output conflict (overwrite disabled): {:?}",
+                        op_id, err
+                    );
                     return Err(err);
                 }
-                info!("[{}] Destination file exists but overwrite is enabled: {}", op_id, output_path_str);
+                info!(
+                    "[{}] Destination file exists but overwrite is enabled: {}",
+                    op_id, output_path_str
+                );
             }
             OutputConflictStatus::NoConflict => {}
         }
@@ -168,12 +188,18 @@ impl EncryptionService {
         let temp_res = match prepare_temp_output_path(&final_output_path) {
             Ok(t) => t,
             Err(e) => {
-                error!("[{}] Failed to create temporary output path: {:?}", op_id, e);
+                error!(
+                    "[{}] Failed to create temporary output path: {:?}",
+                    op_id, e
+                );
                 return Err(e);
             }
         };
         let temp_path = PathBuf::from(&temp_res.temp_path);
-        info!("[{}] Temporary output path prepared: {}", op_id, temp_res.temp_path);
+        info!(
+            "[{}] Temporary output path prepared: {}",
+            op_id, temp_res.temp_path
+        );
 
         // 6. Generate Cryptographic Salt & Derive Key
         let salt = match Salt::generate() {
@@ -187,22 +213,26 @@ impl EncryptionService {
         let argon2_params = Argon2ParamsConfig::default();
 
         info!("[{}] Key derivation started: deriving 256-bit key using Argon2id (64MB memory, 3 iterations, 4 threads)...", op_id);
-        let derived_key = match derive_key_argon2id(&request.password, salt.as_bytes(), Some(&argon2_params)) {
-            Ok(k) => {
-                info!("[{}] Key derivation succeeded.", op_id);
-                k
-            }
-            Err(e) => {
-                error!("[{}] Key derivation failed: {:?}", op_id, e);
-                let _ = cleanup_temp_file_path(&temp_path);
-                return Err(e);
-            }
-        };
+        let derived_key =
+            match derive_key_argon2id(&request.password, salt.as_bytes(), Some(&argon2_params)) {
+                Ok(k) => {
+                    info!("[{}] Key derivation succeeded.", op_id);
+                    k
+                }
+                Err(e) => {
+                    error!("[{}] Key derivation failed: {:?}", op_id, e);
+                    let _ = cleanup_temp_file_path(&temp_path);
+                    return Err(e);
+                }
+            };
 
         // CRITICAL: request.password is dropped from scope here and not referenced again.
 
         // 7. Stream and Encrypt to Temporary Output File
-        info!("[{}] Streaming file encryption to temporary target...", op_id);
+        info!(
+            "[{}] Streaming file encryption to temporary target...",
+            op_id
+        );
         let stream_result = encrypt_file_stream(
             input_path,
             &temp_path,
@@ -217,18 +247,27 @@ impl EncryptionService {
         // Handle Stream Result and Cleanup on Error
         let (_bytes_read, encrypted_size) = match stream_result {
             Ok(res) => {
-                info!("[{}] Chunks processed successfully ({} bytes written to temp file)", op_id, res.1);
+                info!(
+                    "[{}] Chunks processed successfully ({} bytes written to temp file)",
+                    op_id, res.1
+                );
                 res
             }
             Err(err) => {
-                error!("[{}] Streaming encryption encountered error, cleaning temporary file: {:?}", op_id, err);
+                error!(
+                    "[{}] Streaming encryption encountered error, cleaning temporary file: {:?}",
+                    op_id, err
+                );
                 let _ = cleanup_temp_file_path(&temp_path);
                 return Err(err);
             }
         };
 
         // 8. Safely Finalize & Move Temporary File to Final Destination
-        info!("[{}] Finalizing output: moving temporary file to destination: {}", op_id, output_path_str);
+        info!(
+            "[{}] Finalizing output: moving temporary file to destination: {}",
+            op_id, output_path_str
+        );
         if let Err(e) = Self::atomic_finalize_file(&temp_path, &final_output_path) {
             let _ = cleanup_temp_file_path(&temp_path);
             let err = AppError::FinalizationFailed(format!(
@@ -285,11 +324,11 @@ impl Default for EncryptionService {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::crypto::derive_key_argon2id;
+    use crate::crypto::encryption::{build_chunk_aad, decrypt_chunk_for_test};
+    use crate::crypto::format::EncryptedFileHeader;
     use std::io::{Read, Write};
     use tempfile::NamedTempFile;
-    use crate::crypto::format::EncryptedFileHeader;
-    use crate::crypto::encryption::{decrypt_chunk_for_test, build_chunk_aad};
-    use crate::crypto::derive_key_argon2id;
 
     #[test]
     fn test_full_file_encryption_workflow() {
@@ -313,7 +352,9 @@ mod tests {
             overwrite: Some(true),
         };
 
-        let result = service.encrypt_file(req, None, None).expect("Encryption failed");
+        let result = service
+            .encrypt_file(req, None, None)
+            .expect("Encryption failed");
 
         assert_eq!(result.original_size, payload.len() as u64);
         assert!(result.encrypted_size > payload.len() as u64);
@@ -324,8 +365,12 @@ mod tests {
         let header = EncryptedFileHeader::read_from(&mut enc_file).expect("Failed to read header");
 
         // Derive key using password and salt from header
-        let key = derive_key_argon2id("SecureTestPassword123!", header.salt.as_bytes(), Some(&header.argon2_params))
-            .expect("Key derivation");
+        let key = derive_key_argon2id(
+            "SecureTestPassword123!",
+            header.salt.as_bytes(),
+            Some(&header.argon2_params),
+        )
+        .expect("Key derivation");
 
         // Read chunk 1
         let mut chunk_len_buf = [0u8; 4];

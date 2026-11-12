@@ -1,7 +1,7 @@
+use log::{error, info};
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::time::Instant;
-use log::{error, info};
 
 use crate::crypto::{
     decrypt_file_stream, derive_key_argon2id, detect_encrypted_file,
@@ -25,7 +25,10 @@ impl DecryptionService {
     }
 
     /// Inspects the header preamble of a candidate encrypted file.
-    pub fn detect_encrypted_file(&self, path: &str) -> Result<EncryptedFileDetectionResult, AppError> {
+    pub fn detect_encrypted_file(
+        &self,
+        path: &str,
+    ) -> Result<EncryptedFileDetectionResult, AppError> {
         let input_path = Path::new(path);
         detect_encrypted_file(input_path)
     }
@@ -47,7 +50,10 @@ impl DecryptionService {
         is_cancelled: Option<CancellationCheck>,
     ) -> Result<DecryptionResult, AppError> {
         let start_time = Instant::now();
-        info!("Initiating file decryption for input container: {}", request.input_path);
+        info!(
+            "Initiating file decryption for input container: {}",
+            request.input_path
+        );
 
         // 1. Validate Password
         if request.password.is_empty() {
@@ -85,7 +91,11 @@ impl DecryptionService {
 
         // 4. Derive Decryption Key using Argon2id
         info!("Deriving 256-bit decryption key via Argon2id from container salt...");
-        let derived_key = derive_key_argon2id(&request.password, header.salt.as_bytes(), Some(&header.argon2_params))?;
+        let derived_key = derive_key_argon2id(
+            &request.password,
+            header.salt.as_bytes(),
+            Some(&header.argon2_params),
+        )?;
 
         // 5. Authenticate and Recover Metadata
         info!("Authenticating and extracting embedded metadata...");
@@ -110,7 +120,9 @@ impl DecryptionService {
         let output_path_str = final_output_path.to_string_lossy().to_string();
 
         // 7. Validate Output Conflicts
-        let conflict = self.file_service.check_output_conflict(&request.input_path, &output_path_str)?;
+        let conflict = self
+            .file_service
+            .check_output_conflict(&request.input_path, &output_path_str)?;
         match conflict.status {
             OutputConflictStatus::SameAsInput => {
                 return Err(AppError::OutputConflict(
@@ -123,7 +135,9 @@ impl DecryptionService {
                 ));
             }
             OutputConflictStatus::InvalidOutput => {
-                return Err(AppError::InvalidPath("Invalid destination path specified".to_string()));
+                return Err(AppError::InvalidPath(
+                    "Invalid destination path specified".to_string(),
+                ));
             }
             OutputConflictStatus::OutputExists => {
                 if request.overwrite != Some(true) {
@@ -132,7 +146,10 @@ impl DecryptionService {
                         output_path_str
                     )));
                 }
-                info!("Destination file exists but overwrite is enabled: {}", output_path_str);
+                info!(
+                    "Destination file exists but overwrite is enabled: {}",
+                    output_path_str
+                );
             }
             OutputConflictStatus::NoConflict => {}
         }
@@ -140,7 +157,10 @@ impl DecryptionService {
         // 8. Prepare Temporary Output Path
         let temp_res = prepare_temp_output_path(&final_output_path)?;
         let temp_path = PathBuf::from(&temp_res.temp_path);
-        info!("Created temporary decryption target: {}", temp_res.temp_path);
+        info!(
+            "Created temporary decryption target: {}",
+            temp_res.temp_path
+        );
 
         // 9. Stream and Decrypt Payload
         info!("Streaming file decryption and payload verification...");
@@ -157,14 +177,20 @@ impl DecryptionService {
         let (_bytes_read, decrypted_size) = match stream_result {
             Ok(res) => res,
             Err(err) => {
-                error!("Streaming decryption encountered error, cleaning temporary file: {:?}", err);
+                error!(
+                    "Streaming decryption encountered error, cleaning temporary file: {:?}",
+                    err
+                );
                 let _ = cleanup_temp_file_path(&temp_path);
                 return Err(err);
             }
         };
 
         // 10. Safely Finalize & Move Temporary File to Output Path
-        info!("Finalizing output: moving decrypted temporary file to destination: {}", output_path_str);
+        info!(
+            "Finalizing output: moving decrypted temporary file to destination: {}",
+            output_path_str
+        );
         if let Err(e) = Self::atomic_finalize_file(&temp_path, &final_output_path) {
             let _ = cleanup_temp_file_path(&temp_path);
             return Err(AppError::FinalizationFailed(format!(
@@ -217,11 +243,11 @@ impl Default for DecryptionService {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::io::Write;
-    use tempfile::NamedTempFile;
     use crate::crypto::format::CURRENT_FORMAT_VERSION;
     use crate::models::EncryptionRequest;
     use crate::services::encryption_service::EncryptionService;
+    use std::io::Write;
+    use tempfile::NamedTempFile;
 
     #[test]
     fn test_round_trip_encryption_and_decryption_service() {
@@ -250,11 +276,15 @@ mod tests {
             password: password.to_string(),
             overwrite: Some(true),
         };
-        let enc_res = enc_service.encrypt_file(enc_req, None, None).expect("Encryption");
+        let enc_res = enc_service
+            .encrypt_file(enc_req, None, None)
+            .expect("Encryption");
         assert_eq!(enc_res.original_size, test_payload.len() as u64);
 
         // 3. Detect
-        let detect_res = dec_service.detect_encrypted_file(&enc_path).expect("Detection");
+        let detect_res = dec_service
+            .detect_encrypted_file(&enc_path)
+            .expect("Detection");
         assert!(detect_res.is_encrypted);
         assert_eq!(detect_res.format_version, Some(CURRENT_FORMAT_VERSION));
 
@@ -266,7 +296,9 @@ mod tests {
             password: password.to_string(),
             overwrite: Some(true),
         };
-        let dec_res = dec_service.decrypt_file(dec_req, None, None).expect("Decryption");
+        let dec_res = dec_service
+            .decrypt_file(dec_req, None, None)
+            .expect("Decryption");
         assert_eq!(dec_res.decrypted_size, test_payload.len() as u64);
 
         // Verify recovered bytes are identical

@@ -18,10 +18,16 @@ pub async fn encrypt_file(
     encryption_service: State<'_, EncryptionService>,
     request: EncryptionRequest,
 ) -> Result<EncryptionResult, AppError> {
-    info!("Command invoke: encrypt_file for input_path: '{}'", request.input_path);
+    info!(
+        "Command invoke: encrypt_file for input_path: '{}'",
+        request.input_path
+    );
     match encryption_service.encrypt_file(request, None, None) {
         Ok(result) => {
-            info!("Command encrypt_file completed successfully for: '{}'", result.output_path);
+            info!(
+                "Command encrypt_file completed successfully for: '{}'",
+                result.output_path
+            );
             Ok(result)
         }
         Err(err) => {
@@ -38,7 +44,10 @@ pub async fn start_encryption_batch(
     operation_manager: State<'_, OperationManager>,
     request: StartEncryptionBatchRequest,
 ) -> Result<EncryptionOperationResult, AppError> {
-    info!("Command invoke: start_encryption_batch with {} files", request.files.len());
+    info!(
+        "Command invoke: start_encryption_batch with {} files",
+        request.input_files.len()
+    );
     operation_manager.start_batch(Some(&app_handle), request)
 }
 

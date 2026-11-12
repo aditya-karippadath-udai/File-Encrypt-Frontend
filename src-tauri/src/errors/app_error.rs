@@ -206,7 +206,9 @@ impl Serialize for AppError {
             AppError::PasswordTooLong(msg) => ("PASSWORD_TOO_LONG", msg.clone()),
             AppError::KeyDerivationFailed(msg) => ("KEY_DERIVATION_FAILED", msg.clone()),
             AppError::RandomGenerationFailed(msg) => ("RANDOM_GENERATION_FAILED", msg.clone()),
-            AppError::InvalidCryptoConfiguration(msg) => ("INVALID_CRYPTO_CONFIGURATION", msg.clone()),
+            AppError::InvalidCryptoConfiguration(msg) => {
+                ("INVALID_CRYPTO_CONFIGURATION", msg.clone())
+            }
             AppError::EncryptionFailed(msg) => ("ENCRYPTION_FAILED", msg.clone()),
             AppError::InvalidEncryptionRequest(msg) => ("INVALID_ENCRYPTION_REQUEST", msg.clone()),
             AppError::DecryptionFailed(msg) => ("DECRYPTION_FAILED", msg.clone()),
@@ -214,21 +216,29 @@ impl Serialize for AppError {
             AppError::InvalidEncryptedFile(msg) => ("INVALID_ENCRYPTED_FILE", msg.clone()),
             AppError::InvalidFileHeader(msg) => ("INVALID_FILE_HEADER", msg.clone()),
             AppError::UnsupportedFileVersion(msg) => ("UNSUPPORTED_FILE_VERSION", msg.clone()),
-            AppError::UnsupportedEncryptionAlgorithm(msg) => ("UNSUPPORTED_ENCRYPTION_ALGORITHM", msg.clone()),
+            AppError::UnsupportedEncryptionAlgorithm(msg) => {
+                ("UNSUPPORTED_ENCRYPTION_ALGORITHM", msg.clone())
+            }
             AppError::UnsupportedKdf(msg) => ("UNSUPPORTED_KDF", msg.clone()),
             AppError::InvalidKdfConfiguration(msg) => ("INVALID_KDF_CONFIGURATION", msg.clone()),
             AppError::MalformedEncryptedFile(msg) => ("MALFORMED_ENCRYPTED_FILE", msg.clone()),
             AppError::TruncatedEncryptedFile(msg) => ("TRUNCATED_ENCRYPTED_FILE", msg.clone()),
             AppError::AuthenticationFailed(msg) => ("AUTHENTICATION_FAILED", msg.clone()),
-            AppError::InvalidPasswordOrCorruptedFile(msg) => ("INVALID_PASSWORD_OR_CORRUPTED_FILE", msg.clone()),
+            AppError::InvalidPasswordOrCorruptedFile(msg) => {
+                ("INVALID_PASSWORD_OR_CORRUPTED_FILE", msg.clone())
+            }
             AppError::MetadataDecryptionFailed(msg) => ("METADATA_DECRYPTION_FAILED", msg.clone()),
             AppError::InvalidMetadata(msg) => ("INVALID_METADATA", msg.clone()),
             AppError::DecryptedSizeMismatch(msg) => ("DECRYPTED_SIZE_MISMATCH", msg.clone()),
             AppError::DecryptionCancelled(msg) => ("DECRYPTION_CANCELLED", msg.clone()),
             AppError::HeaderCreationFailed(msg) => ("HEADER_CREATION_FAILED", msg.clone()),
             AppError::HeaderWriteFailed(msg) => ("HEADER_WRITE_FAILED", msg.clone()),
-            AppError::InvalidChunkConfiguration(msg) => ("INVALID_CHUNK_CONFIGURATION", msg.clone()),
-            AppError::CryptographicOperationFailed(msg) => ("CRYPTOGRAPHIC_OPERATION_FAILED", msg.clone()),
+            AppError::InvalidChunkConfiguration(msg) => {
+                ("INVALID_CHUNK_CONFIGURATION", msg.clone())
+            }
+            AppError::CryptographicOperationFailed(msg) => {
+                ("CRYPTOGRAPHIC_OPERATION_FAILED", msg.clone())
+            }
             AppError::OutputWriteFailed(msg) => ("OUTPUT_WRITE_FAILED", msg.clone()),
             AppError::FinalizationFailed(msg) => ("FINALIZATION_FAILED", msg.clone()),
             AppError::Cancelled(msg) => ("CANCELLED", msg.clone()),

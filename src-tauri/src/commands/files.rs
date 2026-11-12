@@ -3,8 +3,8 @@ use tauri::State;
 
 use crate::errors::AppError;
 use crate::models::{
-    BatchSummary, FileDialogOptions, FileMetadata, FileValidationResult,
-    OutputConflictResult, TempFileResult,
+    BatchSummary, FileDialogOptions, FileMetadata, FileValidationResult, OutputConflictResult,
+    TempFileResult,
 };
 use crate::services::output_path_service::{BatchConflictPlan, ConflictStrategy};
 use crate::services::{FileService, OutputPathService};
@@ -23,7 +23,10 @@ pub fn resolve_dropped_paths(
     paths: Vec<String>,
     file_service: State<'_, FileService>,
 ) -> Result<Vec<FileValidationResult>, AppError> {
-    info!("Command invoke: resolve_dropped_paths (raw count: {})", paths.len());
+    info!(
+        "Command invoke: resolve_dropped_paths (raw count: {})",
+        paths.len()
+    );
     Ok(file_service.resolve_dropped_paths(paths))
 }
 
@@ -43,7 +46,11 @@ pub fn plan_batch_outputs(
     custom_suffix: Option<String>,
     global_strategy: Option<ConflictStrategy>,
 ) -> Result<BatchConflictPlan, AppError> {
-    info!("Command invoke: plan_batch_outputs (files: {}, mode: {})", input_paths.len(), mode);
+    info!(
+        "Command invoke: plan_batch_outputs (files: {}, mode: {})",
+        input_paths.len(),
+        mode
+    );
     let service = OutputPathService::new();
     service.plan_batch_outputs(
         &input_paths,
@@ -68,7 +75,10 @@ pub fn get_files_metadata(
     paths: Vec<String>,
     file_service: State<'_, FileService>,
 ) -> Result<Vec<FileValidationResult>, AppError> {
-    info!("Command invoke: get_files_metadata (count: {})", paths.len());
+    info!(
+        "Command invoke: get_files_metadata (count: {})",
+        paths.len()
+    );
     Ok(file_service.validate_files(paths))
 }
 

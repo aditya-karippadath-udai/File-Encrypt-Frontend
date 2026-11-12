@@ -38,7 +38,10 @@ pub struct EncryptedFileDetectionResult {
 /// Reads only the minimal preamble without loading entire contents into memory.
 pub fn detect_encrypted_file(path: &Path) -> Result<EncryptedFileDetectionResult, AppError> {
     if !path.exists() {
-        return Err(AppError::FileNotFound(format!("File not found: {:?}", path)));
+        return Err(AppError::FileNotFound(format!(
+            "File not found: {:?}",
+            path
+        )));
     }
 
     let file = File::open(path).map_err(|e| {
@@ -186,21 +189,23 @@ pub fn recover_authenticated_metadata(
     )?;
     let preamble_aad = dummy_header.build_preamble();
 
-    let decrypted_meta_bytes = decrypt_chunk(
-        key,
-        &meta_nonce,
-        &preamble_aad,
-        &header.encrypted_metadata,
-    )
-    .map_err(|_| {
-        AppError::AuthenticationFailed(
-            "Metadata authentication failed: Invalid password or corrupted header".to_string(),
-        )
-    })?;
+    let decrypted_meta_bytes =
+        decrypt_chunk(key, &meta_nonce, &preamble_aad, &header.encrypted_metadata).map_err(
+            |_| {
+                AppError::AuthenticationFailed(
+                    "Metadata authentication failed: Invalid password or corrupted header"
+                        .to_string(),
+                )
+            },
+        )?;
 
-    let mut meta: OriginalFileMetadata = serde_json::from_slice(&decrypted_meta_bytes).map_err(|e| {
-        AppError::InvalidMetadata(format!("Failed to parse authenticated metadata JSON: {}", e))
-    })?;
+    let mut meta: OriginalFileMetadata =
+        serde_json::from_slice(&decrypted_meta_bytes).map_err(|e| {
+            AppError::InvalidMetadata(format!(
+                "Failed to parse authenticated metadata JSON: {}",
+                e
+            ))
+        })?;
 
     // Sanitize filename to prevent path traversal vulnerabilities
     let raw_name = meta.file_name.trim();
@@ -243,10 +248,7 @@ pub fn decrypt_file_stream(
         .len();
 
     let output_file = File::create(output_temp_path).map_err(|e| {
-        AppError::OutputWriteFailed(format!(
-            "Failed to create temporary output file: {}",
-            e
-        ))
+        AppError::OutputWriteFailed(format!("Failed to create temporary output file: {}", e))
     })?;
 
     let chunk_size = header.chunk_size;
@@ -267,7 +269,9 @@ pub fn decrypt_file_stream(
         // 1. Cooperative Cancellation Check
         if let Some(check_fn) = is_cancelled {
             if check_fn() {
-                return Err(AppError::Cancelled("Decryption was cancelled by user".to_string()));
+                return Err(AppError::Cancelled(
+                    "Decryption was cancelled by user".to_string(),
+                ));
             }
         }
 
@@ -330,7 +334,10 @@ pub fn decrypt_file_stream(
         // 7. Write decrypted plaintext to temporary output
         if !plaintext_chunk.is_empty() {
             writer.write_all(&plaintext_chunk).map_err(|e| {
-                AppError::OutputWriteFailed(format!("Failed to write decrypted plaintext chunk: {}", e))
+                AppError::OutputWriteFailed(format!(
+                    "Failed to write decrypted plaintext chunk: {}",
+                    e
+                ))
             })?;
         }
 
@@ -348,7 +355,8 @@ pub fn decrypt_file_stream(
             if let Ok(trailing_count) = reader.read(&mut trailing_byte) {
                 if trailing_count > 0 {
                     return Err(AppError::MalformedEncryptedFile(
-                        "Encrypted file contains unexpected trailing bytes after final chunk".to_string(),
+                        "Encrypted file contains unexpected trailing bytes after final chunk"
+                            .to_string(),
                     ));
                 }
             }
@@ -379,12 +387,12 @@ pub fn decrypt_file_stream(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use tempfile::NamedTempFile;
     use crate::crypto::encryption::{encrypt_chunk, encrypt_file_stream};
     use crate::crypto::format::CURRENT_FORMAT_VERSION;
     use crate::crypto::key_derivation::{derive_key_argon2id, Argon2ParamsConfig};
     use crate::crypto::nonce::BaseNonce;
     use crate::crypto::random::Salt;
+    use tempfile::NamedTempFile;
 
     #[test]
     fn test_decrypt_chunk_tamper_detection() {
@@ -448,7 +456,12 @@ mod tests {
         let mut enc_file = File::open(enc_temp.path()).unwrap();
         let header = EncryptedFileHeader::read_from(&mut enc_file).unwrap();
 
-        let recovered_key = derive_key_argon2id(password, header.salt.as_bytes(), Some(&header.argon2_params)).unwrap();
+        let recovered_key = derive_key_argon2id(
+            password,
+            header.salt.as_bytes(),
+            Some(&header.argon2_params),
+        )
+        .unwrap();
         let metadata = recover_authenticated_metadata(&header, &recovered_key).unwrap();
         assert_eq!(metadata.file_size, 0);
 
@@ -505,7 +518,12 @@ mod tests {
         // Parse header
         let mut enc_file = File::open(enc_temp.path()).unwrap();
         let header = EncryptedFileHeader::read_from(&mut enc_file).unwrap();
-        let recovered_key = derive_key_argon2id(password, header.salt.as_bytes(), Some(&header.argon2_params)).unwrap();
+        let recovered_key = derive_key_argon2id(
+            password,
+            header.salt.as_bytes(),
+            Some(&header.argon2_params),
+        )
+        .unwrap();
         let metadata = recover_authenticated_metadata(&header, &recovered_key).unwrap();
         assert_eq!(metadata.file_size, sample_data.len() as u64);
 

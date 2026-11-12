@@ -67,7 +67,9 @@ impl OperationStatus {
             ),
             OperationStatus::Cancelling => matches!(
                 target,
-                OperationStatus::Cancelled | OperationStatus::CompletedWithErrors | OperationStatus::Failed
+                OperationStatus::Cancelled
+                    | OperationStatus::CompletedWithErrors
+                    | OperationStatus::Failed
             ),
             _ => false,
         }
@@ -147,14 +149,8 @@ impl JobStatus {
                     | JobStatus::Cancelled
                     | JobStatus::Failed
             ),
-            JobStatus::Finalizing => matches!(
-                target,
-                JobStatus::Completed | JobStatus::Failed
-            ),
-            JobStatus::Cancelling => matches!(
-                target,
-                JobStatus::Cancelled | JobStatus::Failed
-            ),
+            JobStatus::Finalizing => matches!(target, JobStatus::Completed | JobStatus::Failed),
+            JobStatus::Cancelling => matches!(target, JobStatus::Cancelled | JobStatus::Failed),
             _ => false,
         }
     }
@@ -175,10 +171,14 @@ impl JobStatus {
 /// Strongly typed request payload to start an encryption batch.
 #[derive(Deserialize)]
 pub struct StartEncryptionBatchRequest {
+    #[serde(alias = "files")]
     pub input_files: Vec<String>,
+    #[serde(default)]
     pub output_directory: Option<String>,
     pub password: String,
+    #[serde(default)]
     pub concurrency: Option<usize>,
+    #[serde(default)]
     pub overwrite: Option<bool>,
 }
 
@@ -322,7 +322,9 @@ impl EncryptionOperation {
             self.completed_at = Some(Utc::now().to_rfc3339());
             if self.failed_files > 0 || self.cancelled_files > 0 {
                 if self.completed_files > 0 {
-                    let _ = self.status.transition_to(OperationStatus::CompletedWithErrors);
+                    let _ = self
+                        .status
+                        .transition_to(OperationStatus::CompletedWithErrors);
                 } else if self.cancelled_files > 0 && self.failed_files == 0 {
                     let _ = self.status.transition_to(OperationStatus::Cancelled);
                 } else {
@@ -339,7 +341,8 @@ impl EncryptionOperation {
         if self.total_bytes > 0 {
             ((self.processed_bytes as f64 / self.total_bytes as f64) * 100.0).clamp(0.0, 100.0)
         } else if self.total_files > 0 {
-            (((self.completed_files + self.skipped_files) as f64 / self.total_files as f64) * 100.0).clamp(0.0, 100.0)
+            (((self.completed_files + self.skipped_files) as f64 / self.total_files as f64) * 100.0)
+                .clamp(0.0, 100.0)
         } else {
             100.0
         }

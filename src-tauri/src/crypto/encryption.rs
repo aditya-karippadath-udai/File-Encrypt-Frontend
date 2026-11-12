@@ -61,7 +61,10 @@ pub fn decrypt_chunk_for_test(
     };
 
     cipher.decrypt(nonce, payload).map_err(|e| {
-        AppError::CryptographicOperationFailed(format!("Chunk decryption / authentication failed: {}", e))
+        AppError::CryptographicOperationFailed(format!(
+            "Chunk decryption / authentication failed: {}",
+            e
+        ))
     })
 }
 
@@ -93,14 +96,23 @@ pub fn encrypt_file_stream(
 ) -> Result<(u64, u64), AppError> {
     let input_file = File::open(input_path).map_err(|e| {
         if e.kind() == std::io::ErrorKind::NotFound {
-            AppError::FileNotFound(format!("Input file does not exist: {}", input_path.display()))
+            AppError::FileNotFound(format!(
+                "Input file does not exist: {}",
+                input_path.display()
+            ))
         } else if e.kind() == std::io::ErrorKind::PermissionDenied {
-            AppError::FileAccessDenied(format!("Permission denied opening input file: {}", input_path.display()))
+            AppError::FileAccessDenied(format!(
+                "Permission denied opening input file: {}",
+                input_path.display()
+            ))
         } else {
             AppError::FileAccessDenied(format!("Failed to open source file for reading: {}", e))
         }
     })?;
-    log::info!("Input file opened successfully for reading: {}", input_path.display());
+    log::info!(
+        "Input file opened successfully for reading: {}",
+        input_path.display()
+    );
 
     let total_file_size = input_file
         .metadata()
@@ -114,7 +126,10 @@ pub fn encrypt_file_stream(
             e
         ))
     })?;
-    log::info!("Output temporary file created successfully for writing: {}", output_temp_path.display());
+    log::info!(
+        "Output temporary file created successfully for writing: {}",
+        output_temp_path.display()
+    );
 
     let mut reader = BufReader::with_capacity(chunk_size as usize, input_file);
     let mut writer = BufWriter::with_capacity(chunk_size as usize + 4096, output_file);
@@ -156,12 +171,16 @@ pub fn encrypt_file_stream(
     )?;
     let header_bytes_written = header.write_to(&mut writer)?;
     let mut total_output_bytes = header_bytes_written as u64;
-    log::info!("Encryption header written successfully ({} bytes)", header_bytes_written);
+    log::info!(
+        "Encryption header written successfully ({} bytes)",
+        header_bytes_written
+    );
 
     // 5. Streaming Chunk Encryption Loop
     log::info!(
         "Processing chunks (chunk_size: {} bytes, total_file_size: {} bytes)",
-        chunk_size, total_file_size
+        chunk_size,
+        total_file_size
     );
     let mut read_buffer = vec![0u8; chunk_size as usize];
     let mut chunk_index: u64 = 1;
@@ -173,7 +192,9 @@ pub fn encrypt_file_stream(
         // Check cancellation
         if let Some(check_fn) = is_cancelled {
             if check_fn() {
-                return Err(AppError::Cancelled("Encryption was cancelled by user".to_string()));
+                return Err(AppError::Cancelled(
+                    "Encryption was cancelled by user".to_string(),
+                ));
             }
         }
 
@@ -197,9 +218,11 @@ pub fn encrypt_file_stream(
             AppError::OutputWriteFailed(format!("Failed to write chunk length: {}", e))
         })?;
 
-        writer.write_all(&[if is_last { 1u8 } else { 0u8 }]).map_err(|e| {
-            AppError::OutputWriteFailed(format!("Failed to write chunk flag: {}", e))
-        })?;
+        writer
+            .write_all(&[if is_last { 1u8 } else { 0u8 }])
+            .map_err(|e| {
+                AppError::OutputWriteFailed(format!("Failed to write chunk flag: {}", e))
+            })?;
 
         writer.write_all(&ciphertext).map_err(|e| {
             AppError::OutputWriteFailed(format!("Failed to write chunk ciphertext: {}", e))
@@ -247,7 +270,8 @@ mod tests {
         assert_ne!(&ciphertext, plaintext);
         assert_eq!(ciphertext.len(), plaintext.len() + POLY1305_TAG_LENGTH);
 
-        let decrypted = decrypt_chunk_for_test(&key, &nonce, aad, &ciphertext).expect("Decryption failed");
+        let decrypted =
+            decrypt_chunk_for_test(&key, &nonce, aad, &ciphertext).expect("Decryption failed");
         assert_eq!(&decrypted, plaintext);
     }
 

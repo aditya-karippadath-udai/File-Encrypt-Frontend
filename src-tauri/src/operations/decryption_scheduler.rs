@@ -1,3 +1,5 @@
+use chrono::Utc;
+use log::{error, info, warn};
 use std::collections::VecDeque;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -5,12 +7,10 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::{Duration, Instant};
-use chrono::Utc;
-use log::{error, info, warn};
 
 use crate::crypto::{
-    decrypt_file_stream, derive_key_argon2id, recover_authenticated_metadata,
-    EncryptedFileHeader, CURRENT_FORMAT_VERSION,
+    decrypt_file_stream, derive_key_argon2id, recover_authenticated_metadata, EncryptedFileHeader,
+    CURRENT_FORMAT_VERSION,
 };
 use crate::errors::AppError;
 use crate::models::decryption::{
@@ -114,7 +114,8 @@ impl DecryptionScheduler {
 
         operation.started_at = Some(started_at_str.clone());
         let _ = operation.status.transition_to(OperationStatus::Running);
-        self.registry.insert_operation(operation.clone(), OperationType::Decrypt);
+        self.registry
+            .insert_operation(operation.clone(), OperationType::Decrypt);
 
         // Emit initial operation status
         emitter.emit_operation_status(&DecryptionProgressPayload {
@@ -152,7 +153,10 @@ impl DecryptionScheduler {
                 loop {
                     // Check if operation-level cancellation has been signalled
                     if op_cancel_clone.load(std::sync::atomic::Ordering::SeqCst) {
-                        info!("Worker {} noticed batch cancellation, draining remaining jobs", worker_idx);
+                        info!(
+                            "Worker {} noticed batch cancellation, draining remaining jobs",
+                            worker_idx
+                        );
                         while let Ok(mut q) = queue_clone.lock() {
                             if let Some(mut job) = q.pop_front() {
                                 let _ = job.status.transition_to(JobStatus::Cancelled);
@@ -184,7 +188,9 @@ impl DecryptionScheduler {
 
                     // Pull next job from queue
                     let next_job = {
-                        let mut q = queue_clone.lock().map_err(|_| AppError::QueueError("Failed to lock job queue".to_string()));
+                        let q = queue_clone.lock().map_err(|_| {
+                            AppError::QueueError("Failed to lock job queue".to_string())
+                        });
                         match q {
                             Ok(mut guard) => guard.pop_front(),
                             Err(_) => break,
@@ -254,7 +260,8 @@ impl DecryptionScheduler {
         }
 
         // Record session summary into in-memory registry
-        self.registry.record_session_summary(&final_op, OperationType::Decrypt, duration_ms);
+        self.registry
+            .record_session_summary(&final_op, OperationType::Decrypt, duration_ms);
 
         // Emit final status
         emitter.emit_operation_status(&DecryptionProgressPayload {
@@ -402,7 +409,11 @@ impl DecryptionScheduler {
         }
 
         // 4. Derive key and recover metadata
-        let derived_key = match derive_key_argon2id(password, header.salt.as_bytes(), Some(&header.argon2_params)) {
+        let derived_key = match derive_key_argon2id(
+            password,
+            header.salt.as_bytes(),
+            Some(&header.argon2_params),
+        ) {
             Ok(k) => k,
             Err(e) => {
                 Self::handle_job_failure(
@@ -426,7 +437,10 @@ impl DecryptionScheduler {
                     &job_id,
                     &input_path_str,
                     job.total_bytes,
-                    &format!("Authentication failed (wrong password or corrupted header): {}", e),
+                    &format!(
+                        "Authentication failed (wrong password or corrupted header): {}",
+                        e
+                    ),
                     registry,
                     emitter,
                 );
@@ -453,7 +467,8 @@ impl DecryptionScheduler {
             .unwrap_or("decrypted_file")
             .to_string();
 
-        if let Ok(conflict) = file_service.check_output_conflict(&input_path_str, &output_path_str) {
+        if let Ok(conflict) = file_service.check_output_conflict(&input_path_str, &output_path_str)
+        {
             match conflict.status {
                 crate::models::file::OutputConflictStatus::SameAsInput => {
                     Self::handle_job_failure(
@@ -552,7 +567,8 @@ impl DecryptionScheduler {
             };
 
             let is_complete = bytes_processed >= total;
-            let should_emit = is_complete || time_elapsed >= Duration::from_millis(100) || pct_diff >= 1.0;
+            let should_emit =
+                is_complete || time_elapsed >= Duration::from_millis(100) || pct_diff >= 1.0;
 
             if should_emit {
                 *last_time = now;
@@ -581,7 +597,11 @@ impl DecryptionScheduler {
                     error: None,
                 });
 
-                Self::emit_aggregated_progress(&op_id_for_progress, &registry_for_progress, &emitter_for_progress);
+                Self::emit_aggregated_progress(
+                    &op_id_for_progress,
+                    &registry_for_progress,
+                    &emitter_for_progress,
+                );
             }
         };
 

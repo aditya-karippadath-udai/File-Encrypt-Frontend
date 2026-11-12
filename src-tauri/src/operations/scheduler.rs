@@ -1,3 +1,5 @@
+use chrono::Utc;
+use log::{error, info, warn};
 use std::collections::VecDeque;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -5,11 +7,9 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::{Duration, Instant};
-use chrono::Utc;
-use log::{error, info, warn};
 
 use crate::crypto::{
-    derive_key_argon2id, encrypt_file_stream, Argon2ParamsConfig, DEFAULT_CHUNK_SIZE, Salt,
+    derive_key_argon2id, encrypt_file_stream, Argon2ParamsConfig, Salt, DEFAULT_CHUNK_SIZE,
 };
 use crate::errors::AppError;
 use crate::models::{
@@ -115,7 +115,8 @@ impl JobScheduler {
 
         operation.started_at = Some(started_at_str.clone());
         let _ = operation.status.transition_to(OperationStatus::Running);
-        self.registry.insert_operation(operation.clone(), OperationType::Encrypt);
+        self.registry
+            .insert_operation(operation.clone(), OperationType::Encrypt);
 
         // Emit initial operation status
         emitter.emit_operation_status(&BatchProgressEvent {
@@ -154,7 +155,10 @@ impl JobScheduler {
                 loop {
                     // Check if operation level cancellation has occurred
                     if op_cancel_clone.load(std::sync::atomic::Ordering::SeqCst) {
-                        info!("Worker {} noticed operation cancellation, cancelling remaining jobs", worker_idx);
+                        info!(
+                            "Worker {} noticed operation cancellation, cancelling remaining jobs",
+                            worker_idx
+                        );
                         // Mark any remaining jobs in queue as cancelled
                         while let Ok(mut q) = queue_clone.lock() {
                             if let Some(mut job) = q.pop_front() {
@@ -187,7 +191,9 @@ impl JobScheduler {
 
                     // Pull next job from queue
                     let next_job = {
-                        let mut q = queue_clone.lock().map_err(|_| AppError::QueueError("Failed to lock job queue".to_string()));
+                        let q = queue_clone.lock().map_err(|_| {
+                            AppError::QueueError("Failed to lock job queue".to_string())
+                        });
                         match q {
                             Ok(mut guard) => guard.pop_front(),
                             Err(_) => break,
@@ -258,7 +264,8 @@ impl JobScheduler {
         }
 
         // Record session summary into in-memory registry
-        self.registry.record_session_summary(&final_op, OperationType::Encrypt, duration_ms);
+        self.registry
+            .record_session_summary(&final_op, OperationType::Encrypt, duration_ms);
 
         // Emit final terminal events
         emitter.emit_operation_status(&BatchProgressEvent {
@@ -371,7 +378,8 @@ impl JobScheduler {
             .unwrap_or("encrypted.enc")
             .to_string();
 
-        if let Ok(conflict) = file_service.check_output_conflict(&input_path_str, &output_path_str) {
+        if let Ok(conflict) = file_service.check_output_conflict(&input_path_str, &output_path_str)
+        {
             match conflict.status {
                 OutputConflictStatus::SameAsInput => {
                     Self::handle_job_failure(
@@ -452,7 +460,8 @@ impl JobScheduler {
         };
 
         let argon2_params = Argon2ParamsConfig::default();
-        let derived_key = match derive_key_argon2id(password, salt.as_bytes(), Some(&argon2_params)) {
+        let derived_key = match derive_key_argon2id(password, salt.as_bytes(), Some(&argon2_params))
+        {
             Ok(k) => k,
             Err(e) => {
                 let _ = cleanup_temp_file_path(&temp_path);
@@ -507,7 +516,8 @@ impl JobScheduler {
             };
 
             let is_complete = bytes_processed >= total;
-            let should_emit = is_complete || time_elapsed >= Duration::from_millis(100) || pct_diff >= 1.0;
+            let should_emit =
+                is_complete || time_elapsed >= Duration::from_millis(100) || pct_diff >= 1.0;
 
             if should_emit {
                 *last_time = now;
@@ -536,7 +546,11 @@ impl JobScheduler {
                     error: None,
                 });
 
-                Self::emit_aggregated_progress(&op_id_for_progress, &registry_for_progress, &emitter_for_progress);
+                Self::emit_aggregated_progress(
+                    &op_id_for_progress,
+                    &registry_for_progress,
+                    &emitter_for_progress,
+                );
             }
         };
 
@@ -734,7 +748,8 @@ mod tests {
         let registry = Arc::new(OperationRegistry::new());
         let cancellation = Arc::new(CancellationRegistry::new());
         let file_service = Arc::new(FileService::new());
-        let scheduler = JobScheduler::new(registry.clone(), cancellation.clone(), file_service.clone());
+        let scheduler =
+            JobScheduler::new(registry.clone(), cancellation.clone(), file_service.clone());
 
         // Create 3 temporary source files
         let mut file1 = NamedTempFile::new().unwrap();

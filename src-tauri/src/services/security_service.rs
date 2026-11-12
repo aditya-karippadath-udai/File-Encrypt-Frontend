@@ -1,7 +1,8 @@
 use crate::crypto::{derive_key_argon2id, Argon2ParamsConfig, Salt};
 use crate::errors::AppError;
 use crate::models::{
-    KeyDerivationRequest, KeyDerivationResponse, PasswordValidationRequest, PasswordValidationResult,
+    KeyDerivationRequest, KeyDerivationResponse, PasswordValidationRequest,
+    PasswordValidationResult,
 };
 use log::{error, info};
 
@@ -102,7 +103,10 @@ impl SecurityService {
         // `derived_key` goes out of scope here and its memory is safely zeroized
         drop(derived_key);
 
-        info!("Argon2id key derivation succeeded ({} bytes generated)", key_len);
+        info!(
+            "Argon2id key derivation succeeded ({} bytes generated)",
+            key_len
+        );
 
         Ok(KeyDerivationResponse {
             success: true,

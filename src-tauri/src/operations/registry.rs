@@ -34,7 +34,12 @@ impl OperationRegistry {
     }
 
     /// Safely updates an individual job within an operation and recalculates totals.
-    pub fn update_job<F>(&self, operation_id: &str, job_id: &str, update_fn: F) -> Option<EncryptionJob>
+    pub fn update_job<F>(
+        &self,
+        operation_id: &str,
+        job_id: &str,
+        update_fn: F,
+    ) -> Option<EncryptionJob>
     where
         F: FnOnce(&mut EncryptionJob),
     {
@@ -136,7 +141,10 @@ impl OperationRegistry {
     /// Gets a specific session operation summary by ID.
     pub fn get_session_summary(&self, operation_id: &str) -> Option<OperationSummary> {
         let summaries = self.session_summaries.read().ok()?;
-        summaries.iter().find(|s| s.operation_id == operation_id).cloned()
+        summaries
+            .iter()
+            .find(|s| s.operation_id == operation_id)
+            .cloned()
     }
 
     /// Clears in-memory session summaries.

@@ -17,7 +17,10 @@ pub fn get_session_operation(
     operation_id: String,
     operation_manager: State<'_, OperationManager>,
 ) -> Result<Option<OperationSummary>, String> {
-    info!("Command invoke: get_session_operation (id: {})", operation_id);
+    info!(
+        "Command invoke: get_session_operation (id: {})",
+        operation_id
+    );
     Ok(operation_manager.get_session_operation(&operation_id))
 }
 

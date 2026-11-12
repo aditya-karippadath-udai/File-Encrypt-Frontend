@@ -20,7 +20,10 @@ impl BaseNonce {
         let mut bytes = [0u8; XCHACHA20_NONCE_LENGTH];
         let mut rng = OsRng;
         rng.try_fill_bytes(&mut bytes).map_err(|e| {
-            AppError::RandomGenerationFailed(format!("Failed to generate secure random nonce: {}", e))
+            AppError::RandomGenerationFailed(format!(
+                "Failed to generate secure random nonce: {}",
+                e
+            ))
         })?;
         Ok(Self { bytes })
     }

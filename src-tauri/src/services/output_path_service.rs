@@ -1,6 +1,6 @@
+use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
-use serde::{Deserialize, Serialize};
 
 use crate::errors::AppError;
 use crate::utils::paths::{are_same_file, normalize_path};
@@ -185,7 +185,10 @@ impl OutputPathService {
             } else if let Some(s) = filename.strip_suffix(".aegis") {
                 (s, ".aegis")
             } else {
-                (filename.strip_suffix(".vault").unwrap_or(filename), ".vault")
+                (
+                    filename.strip_suffix(".vault").unwrap_or(filename),
+                    ".vault",
+                )
             };
 
             let path = Path::new(stem);
@@ -193,14 +196,16 @@ impl OutputPathService {
             let ext = path.extension().and_then(|e| e.to_str());
 
             if let Some(ext) = ext {
-                format!("{} ({}) .{}{}", file_stem.trim(), sequence, ext, suffix)
-                    .replace(" .", ".")
+                format!("{} ({}) .{}{}", file_stem.trim(), sequence, ext, suffix).replace(" .", ".")
             } else {
                 format!("{} ({}){}", file_stem.trim(), sequence, suffix)
             }
         } else {
             let path = Path::new(filename);
-            let file_stem = path.file_stem().and_then(|s| s.to_str()).unwrap_or(filename);
+            let file_stem = path
+                .file_stem()
+                .and_then(|s| s.to_str())
+                .unwrap_or(filename);
             let ext = path.extension().and_then(|e| e.to_str());
 
             if let Some(ext) = ext {
@@ -330,11 +335,15 @@ impl OutputPathService {
             } else if original_output_path.exists() {
                 conflict_type = OutputConflictType::ExistingFile;
                 existing_conflicts += 1;
-                message = Some("A file with this name already exists in the destination folder.".to_string());
+                message = Some(
+                    "A file with this name already exists in the destination folder.".to_string(),
+                );
             } else if target_to_count.get(&orig_norm).copied().unwrap_or(0) > 1 {
                 conflict_type = OutputConflictType::InternalBatchCollision;
                 internal_collisions += 1;
-                message = Some("Multiple files in this batch resolve to the same output filename.".to_string());
+                message = Some(
+                    "Multiple files in this batch resolve to the same output filename.".to_string(),
+                );
             }
 
             let is_conflict = conflict_type != OutputConflictType::None;
@@ -352,7 +361,12 @@ impl OutputPathService {
                         (unique_p, unique_name, false, true)
                     } else {
                         reserved_paths.insert(orig_norm.clone());
-                        (original_output_path.clone(), base_name.clone(), false, false)
+                        (
+                            original_output_path.clone(),
+                            base_name.clone(),
+                            false,
+                            false,
+                        )
                     }
                 }
                 ConflictStrategy::Skip => {
@@ -360,12 +374,22 @@ impl OutputPathService {
                         (original_output_path.clone(), base_name.clone(), true, false)
                     } else {
                         reserved_paths.insert(orig_norm.clone());
-                        (original_output_path.clone(), base_name.clone(), false, false)
+                        (
+                            original_output_path.clone(),
+                            base_name.clone(),
+                            false,
+                            false,
+                        )
                     }
                 }
                 ConflictStrategy::Overwrite | ConflictStrategy::Ask | ConflictStrategy::Cancel => {
                     reserved_paths.insert(orig_norm.clone());
-                    (original_output_path.clone(), base_name.clone(), false, false)
+                    (
+                        original_output_path.clone(),
+                        base_name.clone(),
+                        false,
+                        false,
+                    )
                 }
             };
 
@@ -406,14 +430,23 @@ impl Default for OutputPathService {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use tempfile::tempdir;
     use std::fs::File;
+    use tempfile::tempdir;
 
     #[test]
     fn test_filename_sanitization() {
-        assert_eq!(OutputPathService::sanitize_filename("../../etc/passwd"), "etcpasswd");
-        assert_eq!(OutputPathService::sanitize_filename("valid_doc.pdf"), "valid_doc.pdf");
-        assert_eq!(OutputPathService::sanitize_filename("bad:name?.txt"), "badname.txt");
+        assert_eq!(
+            OutputPathService::sanitize_filename("../../etc/passwd"),
+            "etcpasswd"
+        );
+        assert_eq!(
+            OutputPathService::sanitize_filename("valid_doc.pdf"),
+            "valid_doc.pdf"
+        );
+        assert_eq!(
+            OutputPathService::sanitize_filename("bad:name?.txt"),
+            "badname.txt"
+        );
     }
 
     #[test]
@@ -442,10 +475,7 @@ mod tests {
         File::create(&existing).unwrap();
 
         let service = OutputPathService::new();
-        let inputs = vec![
-            "/tmp/data.txt".to_string(),
-            "/other/data.txt".to_string(),
-        ];
+        let inputs = vec!["/tmp/data.txt".to_string(), "/other/data.txt".to_string()];
 
         // Test with Ask strategy
         let plan_ask = service
@@ -477,6 +507,13 @@ mod tests {
             plan_rename.items[0].planned_output_path,
             plan_rename.items[1].planned_output_path
         );
-        assert!(plan_rename.items[0].planned_output_path.contains(" (1).enc") || plan_rename.items[0].planned_output_path.contains(" (2).enc"));
+        assert!(
+            plan_rename.items[0]
+                .planned_output_path
+                .contains(" (1).enc")
+                || plan_rename.items[0]
+                    .planned_output_path
+                    .contains(" (2).enc")
+        );
     }
 }

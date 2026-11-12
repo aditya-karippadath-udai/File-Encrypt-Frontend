@@ -22,6 +22,9 @@ pub fn cleanup_stale_temp_files(
     recovery_service: State<'_, RecoveryService>,
 ) -> Result<StaleTempCleanupResult, AppError> {
     let all_paths = file_paths.or(paths).unwrap_or_default();
-    info!("Command invoke: cleanup_stale_temp_files (count: {})", all_paths.len());
+    info!(
+        "Command invoke: cleanup_stale_temp_files (count: {})",
+        all_paths.len()
+    );
     recovery_service.cleanup_stale_temp_files(all_paths)
 }

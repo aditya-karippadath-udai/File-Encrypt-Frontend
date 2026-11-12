@@ -33,7 +33,10 @@ impl CancellationRegistry {
     pub fn register_job(&self, operation_id: &str, job_id: &str) -> Arc<AtomicBool> {
         let token = Arc::new(AtomicBool::new(false));
         if let Ok(mut map) = self.job_tokens.write() {
-            map.insert((operation_id.to_string(), job_id.to_string()), token.clone());
+            map.insert(
+                (operation_id.to_string(), job_id.to_string()),
+                token.clone(),
+            );
         }
         token
     }

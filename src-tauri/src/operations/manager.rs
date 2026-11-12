@@ -1,6 +1,6 @@
+use log::{info, warn};
 use std::collections::HashSet;
 use std::sync::Arc;
-use log::{info, warn};
 
 use crate::errors::AppError;
 use crate::models::decryption::{DecryptionOperationResult, StartDecryptionBatchRequest};
@@ -14,7 +14,9 @@ use crate::operations::decryption_scheduler::{
     TauriDecryptionEventEmitter,
 };
 use crate::operations::registry::OperationRegistry;
-use crate::operations::scheduler::{JobScheduler, NoopEventEmitter, ProgressEventEmitter, TauriEventEmitter};
+use crate::operations::scheduler::{
+    JobScheduler, NoopEventEmitter, ProgressEventEmitter, TauriEventEmitter,
+};
 use crate::services::file_service::FileService;
 use crate::services::security_service::SecurityService;
 
@@ -62,7 +64,10 @@ impl OperationManager {
         app_handle: Option<&tauri::AppHandle>,
         request: StartEncryptionBatchRequest,
     ) -> Result<EncryptionOperationResult, AppError> {
-        info!("Validating batch request with {} input files", request.input_files.len());
+        info!(
+            "Validating batch request with {} input files",
+            request.input_files.len()
+        );
 
         // 1. Validate Password
         if request.password.is_empty() {
@@ -147,7 +152,10 @@ impl OperationManager {
         app_handle: Option<&tauri::AppHandle>,
         request: StartDecryptionBatchRequest,
     ) -> Result<DecryptionOperationResult, AppError> {
-        info!("Validating batch decryption request with {} input files", request.input_files.len());
+        info!(
+            "Validating batch decryption request with {} input files",
+            request.input_files.len()
+        );
 
         // 1. Validate Password
         if request.password.is_empty() {
@@ -224,16 +232,22 @@ impl OperationManager {
         info!("Cancelling entire operation {}", operation_id);
         let cancelled = self.cancellation.cancel_operation(operation_id);
         if !cancelled {
-            warn!("Operation {} was not active or already finished", operation_id);
+            warn!(
+                "Operation {} was not active or already finished",
+                operation_id
+            );
         }
         Ok(())
     }
 
     /// Retrieves current snapshot of an operation from the registry.
-    pub fn get_operation_status(&self, operation_id: &str) -> Result<EncryptionOperation, AppError> {
-        self.registry
-            .get_operation(operation_id)
-            .ok_or_else(|| AppError::OperationNotFound(format!("Operation {} not found", operation_id)))
+    pub fn get_operation_status(
+        &self,
+        operation_id: &str,
+    ) -> Result<EncryptionOperation, AppError> {
+        self.registry.get_operation(operation_id).ok_or_else(|| {
+            AppError::OperationNotFound(format!("Operation {} not found", operation_id))
+        })
     }
 
     /// Retrieves all recorded non-persistent session operation summaries.
@@ -267,9 +281,9 @@ impl Default for OperationManager {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::models::OperationStatus;
     use std::io::Write;
     use tempfile::NamedTempFile;
-    use crate::models::OperationStatus;
 
     #[test]
     fn test_operation_manager_batch_flow() {

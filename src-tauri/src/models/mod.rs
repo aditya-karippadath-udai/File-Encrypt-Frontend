@@ -21,5 +21,6 @@ pub use operation::{
 };
 pub use responses::{AppInfoResponse, HealthCheckResponse};
 pub use security::{
-    KeyDerivationRequest, KeyDerivationResponse, PasswordValidationRequest, PasswordValidationResult,
+    KeyDerivationRequest, KeyDerivationResponse, PasswordValidationRequest,
+    PasswordValidationResult,
 };

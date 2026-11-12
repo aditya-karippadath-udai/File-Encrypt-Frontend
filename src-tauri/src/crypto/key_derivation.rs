@@ -192,9 +192,7 @@ pub fn derive_key_argon2id(
     let mut key_buf = vec![0u8; effective_config.output_length_bytes];
     argon2
         .hash_password_into(password.as_bytes(), salt, &mut key_buf)
-        .map_err(|e| {
-            AppError::KeyDerivationFailed(format!("Argon2id execution failed: {}", e))
-        })?;
+        .map_err(|e| AppError::KeyDerivationFailed(format!("Argon2id execution failed: {}", e)))?;
 
     Ok(DerivedKey::with_algorithm(
         key_buf,

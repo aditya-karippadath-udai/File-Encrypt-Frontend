@@ -1,8 +1,8 @@
-use std::fs;
-use std::path::{Path, PathBuf};
 use chrono::{DateTime, Utc};
 use log::{info, warn};
 use serde::{Deserialize, Serialize};
+use std::fs;
+use std::path::{Path, PathBuf};
 
 use crate::errors::AppError;
 
@@ -74,7 +74,10 @@ impl RecoveryService {
             let entries = match fs::read_dir(&dir) {
                 Ok(e) => e,
                 Err(err) => {
-                    warn!("Could not read directory {:?} during recovery scan: {}", dir, err);
+                    warn!(
+                        "Could not read directory {:?} during recovery scan: {}",
+                        dir, err
+                    );
                     continue;
                 }
             };
@@ -219,8 +222,14 @@ mod tests {
             .detect_stale_temp_files(Some(vec![dir_path.to_string_lossy().to_string()]))
             .unwrap();
 
-        assert!(detect_res.files.iter().any(|f| f.filename == ".aegis_tmp_abcd1234_doc.pdf.enc"));
-        assert!(!detect_res.files.iter().any(|f| f.filename == "regular_document.pdf"));
+        assert!(detect_res
+            .files
+            .iter()
+            .any(|f| f.filename == ".aegis_tmp_abcd1234_doc.pdf.enc"));
+        assert!(!detect_res
+            .files
+            .iter()
+            .any(|f| f.filename == "regular_document.pdf"));
 
         // Cleanup
         let cleanup_res = service

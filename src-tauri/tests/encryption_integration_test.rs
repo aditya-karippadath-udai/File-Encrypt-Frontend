@@ -15,7 +15,8 @@ fn test_encryption_and_decryption_stream() {
     let encrypted_path = temp_dir.join("test_document.txt.enc");
     let decrypted_path = temp_dir.join("test_document_decrypted.txt");
 
-    let test_content = b"The quick brown fox jumps over the lazy dog. Highly sensitive document content.";
+    let test_content =
+        b"The quick brown fox jumps over the lazy dog. Highly sensitive document content.";
     fs::write(&input_path, test_content).expect("failed to write test file");
 
     let password = "SuperSecretPassword123!";
@@ -39,7 +40,8 @@ fn test_encryption_and_decryption_stream() {
 
     // Test wrong password decryption failure
     let bad_decrypted_path = temp_dir.join("bad_decrypted.txt");
-    let bad_result = decrypt_file_stream(&encrypted_path, &bad_decrypted_path, "WrongPassword!", None);
+    let bad_result =
+        decrypt_file_stream(&encrypted_path, &bad_decrypted_path, "WrongPassword!", None);
     assert!(bad_result.is_err());
 
     // Clean up
@@ -69,7 +71,9 @@ fn test_encryption_service_full_workflow() {
         overwrite: Some(true),
     };
 
-    let enc_res = enc_service.encrypt_file(req).expect("service encryption failed");
+    let enc_res = enc_service
+        .encrypt_file(req, None, None)
+        .expect("service encryption failed");
     assert!(PathBuf::from(&enc_res.output_path).exists());
 
     // Run decryption service
@@ -81,7 +85,9 @@ fn test_encryption_service_full_workflow() {
         overwrite: Some(true),
     };
 
-    let dec_res = dec_service.decrypt_file(dec_req).expect("service decryption failed");
+    let dec_res = dec_service
+        .decrypt_file(dec_req, None, None)
+        .expect("service decryption failed");
     let restored_bytes = fs::read(&dec_res.output_path).expect("failed to read decrypted output");
     assert_eq!(data, restored_bytes);
 

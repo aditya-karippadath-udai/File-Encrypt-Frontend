@@ -1,8 +1,8 @@
+use chrono::{DateTime, Utc};
+use log::{info, warn};
 use std::collections::HashSet;
 use std::fs;
 use std::path::{Path, PathBuf};
-use chrono::{DateTime, Utc};
-use log::{info, warn};
 
 use crate::errors::AppError;
 use crate::models::{
@@ -61,7 +61,10 @@ impl FileService {
             match self.get_file_metadata(&path_str) {
                 Ok(meta) => results.push(meta),
                 Err(err) => {
-                    warn!("Failed to get metadata for selected file {}: {:?}", path_str, err);
+                    warn!(
+                        "Failed to get metadata for selected file {}: {:?}",
+                        path_str, err
+                    );
                 }
             }
         }
@@ -87,7 +90,9 @@ impl FileService {
     /// Safely retrieves metadata for a single file path without reading contents into memory.
     pub fn get_file_metadata(&self, path: &str) -> Result<FileMetadata, AppError> {
         if path.trim().is_empty() {
-            return Err(AppError::InvalidPath("File path cannot be empty".to_string()));
+            return Err(AppError::InvalidPath(
+                "File path cannot be empty".to_string(),
+            ));
         }
 
         let file_path = Path::new(path);

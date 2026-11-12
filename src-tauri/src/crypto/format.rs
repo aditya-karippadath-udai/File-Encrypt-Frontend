@@ -1,5 +1,5 @@
-use std::io::{Read, Write};
 use serde::{Deserialize, Serialize};
+use std::io::{Read, Write};
 
 use crate::crypto::key_derivation::Argon2ParamsConfig;
 use crate::crypto::nonce::BaseNonce;
@@ -158,9 +158,9 @@ impl EncryptedFileHeader {
         total_written += 4;
 
         if !self.encrypted_metadata.is_empty() {
-            writer
-                .write_all(&self.encrypted_metadata)
-                .map_err(|e| AppError::HeaderWriteFailed(format!("Failed to write encrypted metadata: {}", e)))?;
+            writer.write_all(&self.encrypted_metadata).map_err(|e| {
+                AppError::HeaderWriteFailed(format!("Failed to write encrypted metadata: {}", e))
+            })?;
             total_written += self.encrypted_metadata.len();
         }
 
@@ -172,7 +172,10 @@ impl EncryptedFileHeader {
         // 1. Read & Validate Magic Bytes (5 bytes)
         let mut magic = [0u8; 5];
         reader.read_exact(&mut magic).map_err(|e| {
-            AppError::ValidationError(format!("Failed to read magic bytes or file too small: {}", e))
+            AppError::ValidationError(format!(
+                "Failed to read magic bytes or file too small: {}",
+                e
+            ))
         })?;
         if &magic != MAGIC_BYTES {
             return Err(AppError::ValidationError(
@@ -182,9 +185,9 @@ impl EncryptedFileHeader {
 
         // 2. Read Version (1 byte)
         let mut version_buf = [0u8; 1];
-        reader
-            .read_exact(&mut version_buf)
-            .map_err(|e| AppError::ValidationError(format!("Failed to read version byte: {}", e)))?;
+        reader.read_exact(&mut version_buf).map_err(|e| {
+            AppError::ValidationError(format!("Failed to read version byte: {}", e))
+        })?;
         let version = version_buf[0];
         if version != CURRENT_FORMAT_VERSION {
             return Err(AppError::ValidationError(format!(
@@ -195,9 +198,9 @@ impl EncryptedFileHeader {
 
         // 3. Read Cipher Suite & KDF & Nonce Strategy (3 bytes)
         let mut ids_buf = [0u8; 3];
-        reader
-            .read_exact(&mut ids_buf)
-            .map_err(|e| AppError::ValidationError(format!("Failed to read algorithm IDs: {}", e)))?;
+        reader.read_exact(&mut ids_buf).map_err(|e| {
+            AppError::ValidationError(format!("Failed to read algorithm IDs: {}", e))
+        })?;
         let algorithm_id = ids_buf[0];
         let kdf_id = ids_buf[1];
         let nonce_strategy_id = ids_buf[2];
@@ -245,28 +248,28 @@ impl EncryptedFileHeader {
 
         // 5. Read Salt (1 byte len + bytes)
         let mut salt_len_buf = [0u8; 1];
-        reader.read_exact(&mut salt_len_buf).map_err(|e| {
-            AppError::ValidationError(format!("Failed to read salt length: {}", e))
-        })?;
+        reader
+            .read_exact(&mut salt_len_buf)
+            .map_err(|e| AppError::ValidationError(format!("Failed to read salt length: {}", e)))?;
         let salt_len = salt_len_buf[0] as usize;
         let mut salt_bytes = vec![0u8; salt_len];
-        reader.read_exact(&mut salt_bytes).map_err(|e| {
-            AppError::ValidationError(format!("Failed to read salt bytes: {}", e))
-        })?;
+        reader
+            .read_exact(&mut salt_bytes)
+            .map_err(|e| AppError::ValidationError(format!("Failed to read salt bytes: {}", e)))?;
         let salt = Salt::from_bytes(&salt_bytes)?;
 
         // 6. Read Base Nonce (24 bytes)
         let mut base_nonce_bytes = [0u8; 24];
-        reader.read_exact(&mut base_nonce_bytes).map_err(|e| {
-            AppError::ValidationError(format!("Failed to read base nonce: {}", e))
-        })?;
+        reader
+            .read_exact(&mut base_nonce_bytes)
+            .map_err(|e| AppError::ValidationError(format!("Failed to read base nonce: {}", e)))?;
         let base_nonce = BaseNonce::from_bytes(&base_nonce_bytes)?;
 
         // 7. Read Chunk Size (4 bytes)
         let mut chunk_size_buf = [0u8; 4];
-        reader.read_exact(&mut chunk_size_buf).map_err(|e| {
-            AppError::ValidationError(format!("Failed to read chunk size: {}", e))
-        })?;
+        reader
+            .read_exact(&mut chunk_size_buf)
+            .map_err(|e| AppError::ValidationError(format!("Failed to read chunk size: {}", e)))?;
         let chunk_size = u32::from_be_bytes(chunk_size_buf);
         if chunk_size < MIN_CHUNK_SIZE || chunk_size > MAX_CHUNK_SIZE {
             return Err(AppError::InvalidChunkConfiguration(format!(
@@ -292,7 +295,10 @@ impl EncryptedFileHeader {
         let mut encrypted_metadata = vec![0u8; meta_len];
         if meta_len > 0 {
             reader.read_exact(&mut encrypted_metadata).map_err(|e| {
-                AppError::ValidationError(format!("Failed to read encrypted metadata payload: {}", e))
+                AppError::ValidationError(format!(
+                    "Failed to read encrypted metadata payload: {}",
+                    e
+                ))
             })?;
         }
 
@@ -334,14 +340,9 @@ mod tests {
         let nonce = BaseNonce::generate().expect("Nonce");
         let fake_meta = vec![1, 2, 3, 4, 5, 6, 7, 8];
 
-        let header = EncryptedFileHeader::new(
-            params,
-            salt,
-            nonce,
-            DEFAULT_CHUNK_SIZE,
-            fake_meta.clone(),
-        )
-        .expect("Valid header");
+        let header =
+            EncryptedFileHeader::new(params, salt, nonce, DEFAULT_CHUNK_SIZE, fake_meta.clone())
+                .expect("Valid header");
 
         let mut buffer = Vec::new();
         let written = header.write_to(&mut buffer).expect("Write header");
@@ -369,14 +370,8 @@ mod tests {
         let params = Argon2ParamsConfig::default();
         let salt = Salt::generate().expect("Salt");
         let nonce = BaseNonce::generate().expect("Nonce");
-        let mut header = EncryptedFileHeader::new(
-            params,
-            salt,
-            nonce,
-            DEFAULT_CHUNK_SIZE,
-            vec![],
-        )
-        .unwrap();
+        let mut header =
+            EncryptedFileHeader::new(params, salt, nonce, DEFAULT_CHUNK_SIZE, vec![]).unwrap();
         header.version = 99;
 
         let mut buffer = Vec::new();
